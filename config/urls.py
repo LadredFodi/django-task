@@ -8,6 +8,11 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenVerifyView,
 )
+from config.authentication import (
+    RegisterView, VerifyEmailView, RequestPasswordResetView,
+    ResetPasswordView, ChangePasswordView, ChangeEmailView,
+    ResendVerificationEmailView, LogoutView
+)
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
@@ -21,16 +26,36 @@ schema_view = get_schema_view(
 
 
 urlpatterns = [
-
+    # Admin
     path("admin/", admin.site.urls),
     
+    # API Documentation
     path("swagger/", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),
     path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
     path("swagger.json", schema_view.without_ui(cache_timeout=0), name="schema-json"),
     
-    path("api/auth/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
-    path("api/auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    path("api/auth/token/verify/", TokenVerifyView.as_view(), name="token_verify"),
+    # JWT Authentication
+    path("api/v1/auth/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/v1/auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("api/v1/auth/token/verify/", TokenVerifyView.as_view(), name="token_verify"),
+    path("api/v1/auth/logout/", LogoutView.as_view(), name="auth_logout"),
+    
+    # User Authentication
+    path("api/v1/auth/register/", RegisterView.as_view(), name="auth_register"),
+    path("api/v1/auth/verify-email/<str:uidb64>/<str:token>/", VerifyEmailView.as_view(), name="verify_email"),
+    path("api/v1/auth/resend-verification/", ResendVerificationEmailView.as_view(), name="resend_verification"),
+    path("api/v1/auth/request-password-reset/", RequestPasswordResetView.as_view(), name="request_password_reset"),
+    path("api/v1/auth/reset-password/<str:uidb64>/<str:token>/", ResetPasswordView.as_view(), name="reset_password"),
+    path("api/v1/auth/change-password/", ChangePasswordView.as_view(), name="change_password"),
+    path("api/v1/auth/change-email/", ChangeEmailView.as_view(), name="change_email"),
+    
+    # API Endpoints
+    path("api/v1/cars/", include("cars.urls")),
+    path("api/v1/suppliers/", include("suppliers.urls")),
+    path("api/v1/dealerships/", include("dealerships.urls")),
+    path("api/v1/customers/", include("customers.urls")),
+    path("api/v1/offers/", include("offers.urls")),
+    path("api/v1/promotions/", include("promotions.urls")),
 ]
 
 
