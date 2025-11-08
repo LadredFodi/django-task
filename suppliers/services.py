@@ -1,5 +1,5 @@
-from django.db.models import Count, Sum, Q, Avg, Min
-from typing import Optional, Any, QuerySet
+from django.db.models import Count, Sum, Q, Avg, Min, QuerySet
+from typing import Optional, Any
 from suppliers.models import Supplier, SupplierCar, SupplierDiscount
 from dealerships.services import PurchaseService
 

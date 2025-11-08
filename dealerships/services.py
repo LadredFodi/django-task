@@ -1,7 +1,7 @@
-from django.db.models import Count, Sum, Avg, Q, F
+from django.db.models import Count, Sum, Avg, Q, F, QuerySet
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance
-from typing import Optional, Tuple, Any, QuerySet
+from typing import Optional, Tuple, Any
 from decimal import Decimal
 from dealerships.models import Dealership, DealershipPreference, DealershipInventory, Purchase
 

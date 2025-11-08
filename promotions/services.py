@@ -1,6 +1,6 @@
-from django.db.models import Count, Sum, Avg
+from django.db.models import Count, Sum, Avg, QuerySet
 from django.utils import timezone
-from typing import Optional, Any, QuerySet
+from typing import Optional, Any
 from decimal import Decimal
 from promotions.models import Promotion, PromotionDealership, PromotionSupplier
 

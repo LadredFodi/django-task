@@ -1,15 +1,23 @@
+import logging
+
 from rest_framework import status
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
-from django.utils.http import urlsafe_base64_decode
+from django.core.signing import BadSignature, SignatureExpired
 from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
 
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from config.emails import AccountEmailService
 from customers.services import CustomerService
+
+
+logger = logging.getLogger(__name__)
 
 
 class RegisterView(APIView):
@@ -60,10 +68,9 @@ class RegisterView(APIView):
         )
         
         try:
-            # Place for verification email
-            pass
-        except Exception as e:
-            print(f"Error sending email: {e}")
+            AccountEmailService.send_email_verification(customer.user)
+        except Exception as exc:
+            logger.warning("Failed to send verification email for user %s: %s", customer.user.pk, exc)
         
         return Response({
             'message': 'Registration successful. Check your email for confirmation.',
@@ -122,8 +129,10 @@ class RequestPasswordResetView(APIView):
         
         try:
             user = User.objects.get(email=email)
-            # Place for password reset email
-            pass
+            try:
+                AccountEmailService.send_password_reset_email(user)
+            except Exception as exc:
+                logger.warning("Failed to send password reset email for user %s: %s", user.pk, exc)
         except User.DoesNotExist:
             pass
         
@@ -237,19 +246,18 @@ class ChangeEmailView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        user.email = new_email
-        user.save()
-        
         customer = CustomerService.get_by_user(user)
         if customer:
             customer.email_verified = False
             customer.save(update_fields=['email_verified', 'updated_at'])
-            
-            # Place for verification email
-            pass
+        
+        try:
+            AccountEmailService.send_email_change_confirmation(user, new_email)
+        except Exception as exc:
+            logger.warning("Failed to send email change confirmation for user %s: %s", user.pk, exc)
         
         return Response({
-            'message': 'Email changed. Check your new email for confirmation.',
+            'message': 'Email change request sent. Check your new email for confirmation.',
         }, status=status.HTTP_200_OK)
 
 
@@ -271,12 +279,151 @@ class ResendVerificationEmailView(APIView):
                 {'message': 'Email already confirmed'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
-        # Place for verification email
-        pass
+
+        try:
+            AccountEmailService.send_email_verification(user)
+        except Exception as exc:
+            logger.warning("Failed to resend verification email for user %s: %s", user.pk, exc)
         
         return Response({
             'message': 'Email confirmation letter has been sent',
+        }, status=status.HTTP_200_OK)
+
+
+class ChangeUsernameView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        new_username = request.data.get('new_username')
+        password = request.data.get('password')
+
+        if not new_username or not password:
+            return Response(
+                {'error': 'New username and password are required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user = request.user
+
+        if not user.check_password(password):
+            return Response(
+                {'error': 'Invalid password'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if User.objects.filter(username=new_username).exclude(pk=user.pk).exists():
+            return Response(
+                {'error': 'User with this username already exists'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            AccountEmailService.send_username_change_confirmation(user, new_username)
+        except Exception as exc:
+            logger.warning("Failed to send username change confirmation for user %s: %s", user.pk, exc)
+
+        return Response({
+            'message': 'Username change confirmation sent to your email.',
+        }, status=status.HTTP_200_OK)
+
+
+class ConfirmEmailChangeView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, token):
+        try:
+            payload = AccountEmailService.parse_email_change_token(token)
+        except SignatureExpired:
+            return Response(
+                {'error': 'Confirmation link has expired'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except BadSignature:
+            return Response(
+                {'error': 'Invalid confirmation link'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user_id = payload.get('user_id')
+        new_email = payload.get('new_email')
+
+        if not user_id or not new_email:
+            return Response(
+                {'error': 'Invalid confirmation data'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            user = User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return Response(
+                {'error': 'User not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        if User.objects.filter(email=new_email).exclude(pk=user.pk).exists():
+            return Response(
+                {'error': 'User with this email already exists'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.email = new_email
+        user.save(update_fields=['email'])
+
+        customer = CustomerService.get_by_user(user)
+        if customer:
+            CustomerService.verify_email(customer)
+
+        return Response({
+            'message': 'Email successfully updated and confirmed',
+        }, status=status.HTTP_200_OK)
+
+
+class ConfirmUsernameChangeView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, token):
+        try:
+            payload = AccountEmailService.parse_username_change_token(token)
+        except SignatureExpired:
+            return Response(
+                {'error': 'Confirmation link has expired'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except BadSignature:
+            return Response(
+                {'error': 'Invalid confirmation link'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user_id = payload.get('user_id')
+        new_username = payload.get('new_username')
+
+        if not user_id or not new_username:
+            return Response(
+                {'error': 'Invalid confirmation data'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            user = User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return Response(
+                {'error': 'User not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        if User.objects.filter(username=new_username).exclude(pk=user.pk).exists():
+            return Response(
+                {'error': 'User with this username already exists'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.username = new_username
+        user.save(update_fields=['username'])
+
+        return Response({
+            'message': 'Username successfully updated',
         }, status=status.HTTP_200_OK)
 
 
