@@ -2,7 +2,7 @@ from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
-
+from django.db.models import QuerySet
 from promotions.models import Promotion, PromotionDealership, PromotionSupplier
 from promotions.serializers import (
     PromotionSerializer, PromotionListSerializer,

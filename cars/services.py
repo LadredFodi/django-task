@@ -1,5 +1,5 @@
 from django.db.models import Count
-from typing import Optional, List
+from typing import Optional, List, Any  
 from django.db.models import QuerySet
 from cars.models import CarModel
 

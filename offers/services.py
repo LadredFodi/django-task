@@ -1,6 +1,7 @@
 from django.db.models import Count, Avg
 from django.utils import timezone
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
+from django.db.models import QuerySet
 from offers.models import Offer
 from customers.models import Customer
 from dealerships.models import DealershipInventory

@@ -1,6 +1,6 @@
-from django.db.models import Count, Sum, Avg, Q
+from django.db.models import Count, Sum, Avg, Q, QuerySet
 from django.contrib.auth.models import User
-from typing import Optional, Any, QuerySet
+from typing import Optional, Any
 from decimal import Decimal
 from customers.models import Customer, Sale
 
@@ -27,6 +27,13 @@ class CustomerService:
             return user.customer_profile
         except Customer.DoesNotExist:
             return None
+    
+    @staticmethod
+    def get_by_user(user: User) -> Optional[Customer]:
+        """
+        Backwards-compatible alias used across the codebase.
+        """
+        return CustomerService.get_customer_by_user(user)
     
     @staticmethod
     def create_customer(user: User, **kwargs: Any) -> Customer:

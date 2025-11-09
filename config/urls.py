@@ -9,9 +9,17 @@ from rest_framework_simplejwt.views import (
     TokenVerifyView,
 )
 from config.authentication import (
-    RegisterView, VerifyEmailView, RequestPasswordResetView,
-    ResetPasswordView, ChangePasswordView, ChangeEmailView,
-    ResendVerificationEmailView, LogoutView
+    ChangeEmailView,
+    ChangePasswordView,
+    ChangeUsernameView,
+    ConfirmEmailChangeView,
+    ConfirmUsernameChangeView,
+    LogoutView,
+    RegisterView,
+    RequestPasswordResetView,
+    ResendVerificationEmailView,
+    ResetPasswordView,
+    VerifyEmailView,
 )
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
@@ -48,6 +56,9 @@ urlpatterns = [
     path("api/v1/auth/reset-password/<str:uidb64>/<str:token>/", ResetPasswordView.as_view(), name="reset_password"),
     path("api/v1/auth/change-password/", ChangePasswordView.as_view(), name="change_password"),
     path("api/v1/auth/change-email/", ChangeEmailView.as_view(), name="change_email"),
+    path("api/v1/auth/change-username/", ChangeUsernameView.as_view(), name="change_username"),
+    path("api/v1/auth/confirm-email-change/<str:token>/", ConfirmEmailChangeView.as_view(), name="confirm_email_change"),
+    path("api/v1/auth/confirm-username-change/<str:token>/", ConfirmUsernameChangeView.as_view(), name="confirm_username_change"),
     
     # API Endpoints
     path("api/v1/cars/", include("cars.urls")),
