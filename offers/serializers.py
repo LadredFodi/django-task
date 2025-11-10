@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from offers.models import Offer
 from cars.serializers import CarModelListSerializer
-from customers.serializers import CustomerListSerializer
+from offers.tasks import process_customer_offer
 
 
 class OfferSerializer(serializers.ModelSerializer):
@@ -127,8 +127,8 @@ class OfferCreateSerializer(serializers.ModelSerializer):
         validated_data['customer'] = request.user.customer_profile
         
         offer = Offer.objects.create(**validated_data)
-        
-        # Run Celery task for finding suitable offers
+
+        process_customer_offer.delay(offer.id)
         
         return offer
 
