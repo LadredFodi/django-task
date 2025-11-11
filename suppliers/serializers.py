@@ -117,3 +117,27 @@ class SupplierDiscountSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'is_applied', 'created_at', 'updated_at']
 
+
+class SupplierStatisticsSerializer(serializers.Serializer):
+
+    supplier_id = serializers.IntegerField()
+    supplier_name = serializers.CharField()
+    rating = serializers.DecimalField(max_digits=4, decimal_places=2)
+    
+    total_sales = serializers.IntegerField()
+    total_revenue = serializers.DecimalField(max_digits=16, decimal_places=2)
+    avg_order_value = serializers.DecimalField(max_digits=16, decimal_places=2)
+  
+    total_car_models = serializers.IntegerField()
+    total_available_cars = serializers.IntegerField()
+    average_price = serializers.DecimalField(max_digits=16, decimal_places=2)
+    
+    partner_dealerships = serializers.IntegerField()
+    active_discounts = serializers.IntegerField()
+    
+    top_partner_dealerships = serializers.ListField(child=serializers.DictField())
+    
+    top_selling_models = serializers.ListField(child=serializers.DictField())
+    
+    active_promotions = serializers.ListField(child=serializers.DictField())
+

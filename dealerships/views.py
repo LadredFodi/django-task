@@ -9,7 +9,8 @@ from dealerships.serializers import (
     DealershipSerializer, DealershipListSerializer,
     DealershipPreferenceSerializer,
     DealershipInventorySerializer, DealershipInventoryListSerializer,
-    PurchaseSerializer, PurchaseListSerializer
+    PurchaseSerializer, PurchaseListSerializer,
+    DealershipStatisticsSerializer, PurchaseStatisticsSerializer
 )
 from dealerships.filters import (
     DealershipFilter, DealershipPreferenceFilter,
@@ -63,7 +64,8 @@ class DealershipViewSet(viewsets.ModelViewSet):
     def statistics(self, request, pk=None):
         dealership = self.get_object()
         stats = DealershipService.get_dealership_statistics(dealership)
-        return Response(stats)
+        serializer = DealershipStatisticsSerializer(stats)
+        return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
     def nearby(self, request):
@@ -208,4 +210,5 @@ class PurchaseViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def statistics(self, request):
         stats = PurchaseService.get_statistics()
-        return Response(stats)
+        serializer = PurchaseStatisticsSerializer(stats)
+        return Response(serializer.data)

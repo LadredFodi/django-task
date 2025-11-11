@@ -199,3 +199,35 @@ class CustomerRegistrationSerializer(serializers.ModelSerializer):
         
         return customer
 
+
+class CustomerStatisticsSerializer(serializers.Serializer):
+
+    customer_id = serializers.IntegerField()
+    username = serializers.CharField()
+    email = serializers.EmailField()
+    customer_type = serializers.CharField()
+    
+    total_purchases = serializers.IntegerField()
+    total_spent = serializers.DecimalField(max_digits=16, decimal_places=2)
+    balance = serializers.DecimalField(max_digits=16, decimal_places=2)
+    loyalty_points = serializers.IntegerField()
+    
+    purchases = serializers.DictField()
+    
+    favorite_brands = serializers.ListField(child=serializers.DictField())
+    
+    favorite_dealerships = serializers.ListField(child=serializers.DictField())
+    
+    recent_purchases = serializers.ListField(child=serializers.DictField())
+
+
+class SaleStatisticsSerializer(serializers.Serializer):
+
+    overall = serializers.DictField()
+    
+    top_dealerships = serializers.ListField(child=serializers.DictField())
+    
+    top_models = serializers.ListField(child=serializers.DictField())
+    
+    promotions_impact = serializers.DictField()
+

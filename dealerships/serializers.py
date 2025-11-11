@@ -210,3 +210,35 @@ class PurchaseListSerializer(serializers.ModelSerializer):
             'created_at',
         ]
 
+
+class DealershipStatisticsSerializer(serializers.Serializer):
+  
+    balance = serializers.DecimalField(max_digits=16, decimal_places=2)
+    total_sales = serializers.IntegerField()
+    total_revenue = serializers.DecimalField(max_digits=16, decimal_places=2)
+    total_profit = serializers.DecimalField(max_digits=16, decimal_places=2)
+    
+    inventory = serializers.DictField(child=serializers.DecimalField(max_digits=16, decimal_places=2))
+    
+    sales = serializers.DictField()
+    
+    purchases = serializers.DictField()
+    
+    top_selling_models = serializers.ListField(child=serializers.DictField())
+    
+    top_customers = serializers.ListField(child=serializers.DictField())
+    
+    active_promotions = serializers.ListField(child=serializers.DictField())
+
+
+class PurchaseStatisticsSerializer(serializers.Serializer):
+
+    total_purchases = serializers.IntegerField()
+    total_quantity = serializers.IntegerField()
+    total_amount = serializers.DecimalField(max_digits=16, decimal_places=2)
+    avg_unit_price = serializers.DecimalField(max_digits=16, decimal_places=2)
+    
+    top_suppliers = serializers.ListField(child=serializers.DictField())
+    
+    top_car_models = serializers.ListField(child=serializers.DictField())
+
