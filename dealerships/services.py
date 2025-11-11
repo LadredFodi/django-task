@@ -1,7 +1,8 @@
-from django.db.models import Count, Sum, Avg, Q, F, QuerySet
+from django.db.models import Count, Sum, Avg, QuerySet
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance
-from typing import Optional, Tuple, Any
+from django.utils import timezone
+from typing import Optional, Any
 from decimal import Decimal
 from dealerships.models import Dealership, DealershipPreference, DealershipInventory, Purchase
 
@@ -42,15 +43,55 @@ class DealershipService:
             total_cars=Sum('quantity'),
             total_models=Count('id'),
             avg_selling_price=Avg('selling_price'),
+            avg_purchase_price=Avg('purchase_price'),
         )
         
         sales_stats = dealership.sales.filter(is_active=True).aggregate(
             total_sales_count=Count('id'),
             total_sales_revenue=Sum('price'),
             avg_sale_price=Avg('price'),
+            avg_discount=Avg('discount_applied'),
         )
         
         unique_customers = dealership.sales.filter(is_active=True).values('customer').distinct().count()
+        
+        purchases_stats = dealership.purchases.filter(is_active=True).aggregate(
+            total_purchases_count=Count('id'),
+            total_purchases_amount=Sum('total_price'),
+            avg_purchase_price=Avg('unit_price'),
+        )
+        
+        top_selling_models = list(
+            dealership.sales.filter(is_active=True)
+            .values('car_model__brand', 'car_model__model', 'car_model__year')
+            .annotate(
+                count=Count('id'),
+                revenue=Sum('price')
+            )
+            .order_by('-count')[:5]
+        )
+        
+        top_customers = list(
+            dealership.sales.filter(is_active=True)
+            .values('customer__user__username', 'customer__user__email')
+            .annotate(
+                purchases_count=Count('id'),
+                total_spent=Sum('price')
+            )
+            .order_by('-total_spent')[:10]
+        )
+        
+        now = timezone.now()
+        active_promotions = list(
+            dealership.promotions.filter(
+                is_active=True,
+                promotion__is_active=True,
+                promotion__start_date__lte=now,
+                promotion__end_date__gte=now
+            )
+            .values('promotion__name', 'discount_percent', 'times_applied')
+            .order_by('-discount_percent')[:10]
+        )
         
         return {
             'balance': float(dealership.balance),
@@ -61,13 +102,23 @@ class DealershipService:
                 'total_cars': inventory_stats['total_cars'] or 0,
                 'total_models': inventory_stats['total_models'] or 0,
                 'avg_selling_price': float(inventory_stats['avg_selling_price'] or 0),
+                'avg_purchase_price': float(inventory_stats['avg_purchase_price'] or 0),
             },
             'sales': {
                 'total_count': sales_stats['total_sales_count'] or 0,
                 'total_revenue': float(sales_stats['total_sales_revenue'] or 0),
                 'avg_price': float(sales_stats['avg_sale_price'] or 0),
+                'avg_discount': float(sales_stats['avg_discount'] or 0),
                 'unique_customers': unique_customers,
             },
+            'purchases': {
+                'total_count': purchases_stats['total_purchases_count'] or 0,
+                'total_amount': float(purchases_stats['total_purchases_amount'] or 0),
+                'avg_price': float(purchases_stats['avg_purchase_price'] or 0),
+            },
+            'top_selling_models': top_selling_models,
+            'top_customers': top_customers,
+            'active_promotions': active_promotions,
         }
     
     @staticmethod
@@ -188,12 +239,42 @@ class PurchaseService:
     
     @staticmethod
     def get_statistics() -> dict[str, Any]:
-        return Purchase.objects.filter(is_active=True).aggregate(
+        queryset = Purchase.objects.filter(is_active=True)
+        
+        basic_stats = queryset.aggregate(
             total_purchases=Count('id'),
             total_quantity=Sum('quantity'),
             total_amount=Sum('total_price'),
             avg_unit_price=Avg('unit_price'),
         )
+        
+        top_suppliers = list(
+            queryset.values('supplier__name')
+            .annotate(
+                purchases_count=Count('id'),
+                total_quantity=Sum('quantity'),
+                total_revenue=Sum('total_price')
+            )
+            .order_by('-total_revenue')[:10]
+        )
+
+        top_car_models = list(
+            queryset.values('car_model__brand', 'car_model__model')
+            .annotate(
+                purchases_count=Count('id'),
+                total_quantity=Sum('quantity')
+            )
+            .order_by('-total_quantity')[:10]
+        )
+        
+        return {
+            'total_purchases': basic_stats['total_purchases'] or 0,
+            'total_quantity': basic_stats['total_quantity'] or 0,
+            'total_amount': float(basic_stats['total_amount'] or 0),
+            'avg_unit_price': float(basic_stats['avg_unit_price'] or 0),
+            'top_suppliers': top_suppliers,
+            'top_car_models': top_car_models,
+        }
 
 
 class DealershipPreferenceService:

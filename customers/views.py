@@ -9,7 +9,8 @@ from customers.models import Customer, Sale
 from customers.serializers import (
     CustomerSerializer, CustomerListSerializer,
     SaleSerializer, SaleListSerializer,
-    CustomerRegistrationSerializer
+    CustomerRegistrationSerializer,
+    CustomerStatisticsSerializer, SaleStatisticsSerializer
 )
 from customers.filters import CustomerFilter, SaleFilter
 from customers.services import CustomerService, SaleService
@@ -122,7 +123,8 @@ class CustomerViewSet(viewsets.ModelViewSet):
     def statistics(self, request, pk=None):
         customer = self.get_object()
         stats = CustomerService.get_statistics(customer)
-        return Response(stats)
+        serializer = CustomerStatisticsSerializer(stats)
+        return Response(serializer.data)
     
     @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
     def update_balance(self, request, pk=None):
@@ -212,4 +214,5 @@ class SaleViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def statistics(self, request):
         stats = SaleService.get_sales_statistics()
-        return Response(stats)
+        serializer = SaleStatisticsSerializer(stats)
+        return Response(serializer.data)

@@ -64,6 +64,7 @@ class CustomerService:
             total_count=Count('id'),
             total_spent=Sum('price'),
             avg_price=Avg('price'),
+            avg_discount=Avg('discount_applied'),
         )
         
         favorite_brands = list(
@@ -73,18 +74,49 @@ class CustomerService:
             .order_by('-count')[:5]
         )
         
+        favorite_dealerships = list(
+            customer.purchases.filter(is_active=True)
+            .values('dealership__name', 'dealership__city')
+            .annotate(
+                purchases_count=Count('id'),
+                total_spent=Sum('price')
+            )
+            .order_by('-purchases_count')[:5]
+        )
+        
+        recent_purchases = list(
+            customer.purchases.filter(is_active=True)
+            .select_related('car_model', 'dealership')
+            .values(
+                'id',
+                'car_model__brand',
+                'car_model__model',
+                'car_model__year',
+                'dealership__name',
+                'price',
+                'created_at'
+            )
+            .order_by('-created_at')[:10]
+        )
+        
         return {
+            'customer_id': customer.id,
+            'username': customer.user.username,
+            'email': customer.user.email,
+            'customer_type': customer.customer_type,
             'total_purchases': customer.total_purchases,
             'total_spent': float(customer.total_spent),
             'balance': float(customer.balance),
             'loyalty_points': customer.loyalty_points,
-            'customer_type': customer.customer_type,
             'purchases': {
                 'count': purchases_stats['total_count'] or 0,
                 'total': float(purchases_stats['total_spent'] or 0),
                 'average': float(purchases_stats['avg_price'] or 0),
+                'avg_discount': float(purchases_stats['avg_discount'] or 0),
             },
             'favorite_brands': favorite_brands,
+            'favorite_dealerships': favorite_dealerships,
+            'recent_purchases': recent_purchases,
         }
     
     @staticmethod
@@ -170,23 +202,47 @@ class SaleService:
             total_revenue=Sum('price'),
             avg_price=Avg('price'),
             avg_discount=Avg('discount_applied'),
+            total_discount_given=Sum('original_price') - Sum('price') if queryset.exists() else 0,
         )
         
         sales_by_dealership = list(
-            queryset.values('dealership__name')
-            .annotate(count=Count('id'), revenue=Sum('price'))
+            queryset.values('dealership__name', 'dealership__city')
+            .annotate(
+                count=Count('id'),
+                revenue=Sum('price')
+            )
             .order_by('-revenue')[:10]
         )
         
         top_models = list(
-            queryset.values('car_model__brand', 'car_model__model')
-            .annotate(count=Count('id'))
+            queryset.values('car_model__brand', 'car_model__model', 'car_model__year')
+            .annotate(
+                count=Count('id'),
+                revenue=Sum('price')
+            )
             .order_by('-count')[:10]
         )
         
+        promotions_impact = queryset.filter(promotion_applied__isnull=False).aggregate(
+            sales_with_promotion=Count('id'),
+            total_discount=Sum('original_price') - Sum('price') if queryset.filter(promotion_applied__isnull=False).exists() else 0,
+            avg_promotion_discount=Avg('discount_applied'),
+        )
+        
         return {
-            'overall': stats,
+            'overall': {
+                'total_sales': stats['total_sales'] or 0,
+                'total_revenue': float(stats['total_revenue'] or 0),
+                'avg_price': float(stats['avg_price'] or 0),
+                'avg_discount': float(stats['avg_discount'] or 0),
+                'total_discount_given': float(stats.get('total_discount_given') or 0),
+            },
             'top_dealerships': sales_by_dealership,
             'top_models': top_models,
+            'promotions_impact': {
+                'sales_with_promotion': promotions_impact['sales_with_promotion'] or 0,
+                'total_discount': float(promotions_impact.get('total_discount') or 0),
+                'avg_promotion_discount': float(promotions_impact['avg_promotion_discount'] or 0),
+            },
         }
 

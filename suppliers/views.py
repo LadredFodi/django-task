@@ -8,7 +8,7 @@ from suppliers.models import Supplier, SupplierCar, SupplierDiscount
 from suppliers.serializers import (
     SupplierSerializer, SupplierListSerializer,
     SupplierCarSerializer, SupplierCarListSerializer,
-    SupplierDiscountSerializer
+    SupplierDiscountSerializer, SupplierStatisticsSerializer
 )
 from suppliers.filters import SupplierFilter, SupplierCarFilter, SupplierDiscountFilter
 from suppliers.services import SupplierService, SupplierCarService, SupplierDiscountService
@@ -48,7 +48,8 @@ class SupplierViewSet(viewsets.ModelViewSet):
     def statistics(self, request, pk=None):
         supplier = self.get_object()
         stats = SupplierService.get_supplier_statistics(supplier)
-        return Response(stats)
+        serializer = SupplierStatisticsSerializer(stats)
+        return Response(serializer.data)
     
     @action(detail=True, methods=['post'])
     def restore(self, request, pk=None):
