@@ -51,7 +51,7 @@ class SupplierService:
             avg_order_value=Avg('total_price'),
         )
         
-        partner_stats = supplier.supplier_discounts.filter(is_active=True).aggregate(
+        partner_stats = supplier.loyalty_discounts.filter(is_active=True).aggregate(
             total_partners=Count('id'),
             active_discounts=Count('id', filter=Q(is_applied=True)),
         )

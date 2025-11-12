@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 from typing import Optional, Any
 from decimal import Decimal
 from customers.models import Customer, Sale
+from dealerships.services import DealershipInventoryService
+from dealerships.models import DealershipInventory
 
 
 class CustomerService:
@@ -30,9 +32,6 @@ class CustomerService:
     
     @staticmethod
     def get_by_user(user: User) -> Optional[Customer]:
-        """
-        Backwards-compatible alias used across the codebase.
-        """
         return CustomerService.get_customer_by_user(user)
     
     @staticmethod
@@ -178,9 +177,6 @@ class SaleService:
         dealership.balance += sale.price
         dealership.save(update_fields=['total_sales', 'total_revenue', 'balance', 'updated_at'])
     
-        from dealerships.services import DealershipInventoryService
-        from dealerships.models import DealershipInventory
-        
         try:
             inventory = DealershipInventory.objects.get(
                 dealership=sale.dealership,
@@ -202,8 +198,13 @@ class SaleService:
             total_revenue=Sum('price'),
             avg_price=Avg('price'),
             avg_discount=Avg('discount_applied'),
-            total_discount_given=Sum('original_price') - Sum('price') if queryset.exists() else 0,
+            sum_original=Sum('original_price'),
+            sum_price=Sum('price'),
         )
+        
+        total_discount_given = 0
+        if stats['sum_original'] and stats['sum_price']:
+            total_discount_given = stats['sum_original'] - stats['sum_price']
         
         sales_by_dealership = list(
             queryset.values('dealership__name', 'dealership__city')
@@ -223,11 +224,17 @@ class SaleService:
             .order_by('-count')[:10]
         )
         
-        promotions_impact = queryset.filter(promotion_applied__isnull=False).aggregate(
+        promo_queryset = queryset.filter(promotion_applied__isnull=False)
+        promotions_impact = promo_queryset.aggregate(
             sales_with_promotion=Count('id'),
-            total_discount=Sum('original_price') - Sum('price') if queryset.filter(promotion_applied__isnull=False).exists() else 0,
+            sum_original_promo=Sum('original_price'),
+            sum_price_promo=Sum('price'),
             avg_promotion_discount=Avg('discount_applied'),
         )
+        
+        promo_discount = 0
+        if promotions_impact['sum_original_promo'] and promotions_impact['sum_price_promo']:
+            promo_discount = promotions_impact['sum_original_promo'] - promotions_impact['sum_price_promo']
         
         return {
             'overall': {
@@ -235,13 +242,13 @@ class SaleService:
                 'total_revenue': float(stats['total_revenue'] or 0),
                 'avg_price': float(stats['avg_price'] or 0),
                 'avg_discount': float(stats['avg_discount'] or 0),
-                'total_discount_given': float(stats.get('total_discount_given') or 0),
+                'total_discount_given': float(total_discount_given),
             },
             'top_dealerships': sales_by_dealership,
             'top_models': top_models,
             'promotions_impact': {
                 'sales_with_promotion': promotions_impact['sales_with_promotion'] or 0,
-                'total_discount': float(promotions_impact.get('total_discount') or 0),
+                'total_discount': float(promo_discount),
                 'avg_promotion_discount': float(promotions_impact['avg_promotion_discount'] or 0),
             },
         }

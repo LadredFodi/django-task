@@ -1,10 +1,17 @@
 from django.db.models import Count, Sum, Avg, QuerySet
-from django.contrib.gis.geos import Point
-from django.contrib.gis.measure import Distance
 from django.utils import timezone
 from typing import Optional, Any
 from decimal import Decimal
 from dealerships.models import Dealership, DealershipPreference, DealershipInventory, Purchase
+
+try:
+    from django.contrib.gis.geos import Point
+    from django.contrib.gis.measure import Distance
+    HAS_GIS = True
+except (ImportError, Exception):
+    Point = None
+    Distance = None
+    HAS_GIS = False
 
 
 class DealershipService:
@@ -123,6 +130,9 @@ class DealershipService:
     
     @staticmethod
     def find_nearby(latitude: float, longitude: float, radius: float = 50) -> QuerySet[Dealership]:
+        if not HAS_GIS or not Point or not Distance:
+            return Dealership.objects.filter(is_active=True)
+        
         point = Point(longitude, latitude, srid=4326)
         return Dealership.objects.filter(
             is_active=True,

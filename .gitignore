@@ -7,3 +7,5 @@ __pycache__/
 venv/
 migrations/
 celerybeat-schedule
+.pytest-cache/
+*.sqlite3

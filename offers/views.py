@@ -58,8 +58,10 @@ class OfferViewSet(viewsets.ModelViewSet):
             return [IsAuthenticated(), IsEmailVerified()]
         elif self.action in ['update', 'partial_update', 'destroy']:
             return [IsOwnerOrAdmin()]
-        elif self.action in ['process', 'complete', 'cancel']:
+        elif self.action in ['process', 'complete']:
             return [IsAdminUser()]
+        elif self.action == 'cancel':
+            return [IsAuthenticated()]
         return super().get_permissions()
     
     def perform_destroy(self, instance):
@@ -141,7 +143,7 @@ class OfferViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], permission_classes=[IsAdminUser])
     def statistics(self, request):
-        stats = OfferService.get_offers_statistics()
+        stats = OfferService.get_statistics()
         return Response(stats)
     
     @action(detail=True, methods=['get'])
