@@ -5,6 +5,7 @@ from rest_framework import status
 from unittest.mock import patch
 from django.db import IntegrityError
 from django.contrib.auth.models import User
+from django.contrib.gis.geos import Point
 
 from dealerships.models import Dealership, DealershipInventory, DealershipPreference
 from dealerships.services import (
@@ -113,12 +114,6 @@ class TestDealershipService:
         assert result.id == dealership.id
     
     def test_create_dealership(self, db):
-        try:
-            from django.contrib.gis.geos import Point
-            has_gis = True
-        except (ImportError, Exception):
-            has_gis = False
-        
         data = {
             'name': 'New Dealership',
             'country': 'GB',
@@ -126,11 +121,9 @@ class TestDealershipService:
             'address': '10 Downing St',
             'email': 'new@dealership.com',
             'phone': '+441234567890',
-            'balance': Decimal('50000.00')
+            'balance': Decimal('50000.00'),
+            'location': Point(-0.1276, 51.5074, srid=4326)
         }
-        
-        if has_gis:
-            data['location'] = Point(-0.1276, 51.5074)
         
         dealership = DealershipService.create_dealership(data)
         
@@ -166,23 +159,10 @@ class TestDealershipService:
         assert stats['total_sales'] >= 0
     
     def test_find_nearby_dealerships(self, dealership_factory, db):
-        try:
-            from django.contrib.gis.geos import Point
-            has_gis = True
-        except (ImportError, Exception):
-            has_gis = False
-        
-        if not has_gis:
-            nearby = DealershipService.find_nearby(
-                latitude=34.0522,
-                longitude=-118.2437,
-                radius=50
-            )
-            assert nearby.count() >= 0
-            return
-        
-        dealership_factory(location=Point(-118.2437, 34.0522))
-        dealership_factory(location=Point(-74.0060, 40.7128))
+
+        dealership_factory(location=Point(-118.2437, 34.0522, srid=4326))
+        dealership_factory(location=Point(-74.0060, 40.7128, srid=4326))
+       
         
         nearby = DealershipService.find_nearby(
             latitude=34.0522,

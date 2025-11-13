@@ -15,6 +15,7 @@ from customers.serializers import (
 from customers.filters import CustomerFilter, SaleFilter
 from customers.services import CustomerService, SaleService
 from config.permissions import IsAdminUser, IsOwnerOrAdmin
+from config.enums import ViewAction
 
 
 class CustomerViewSet(viewsets.ModelViewSet):
@@ -28,9 +29,9 @@ class CustomerViewSet(viewsets.ModelViewSet):
     ordering = ['-total_spent']
     
     def get_serializer_class(self):
-        if self.action == 'register':
+        if self.action == ViewAction.REGISTER:
             return CustomerRegistrationSerializer
-        elif self.action == 'list':
+        elif self.action == ViewAction.LIST:
             return CustomerListSerializer
         return CustomerSerializer
     
@@ -50,9 +51,9 @@ class CustomerViewSet(viewsets.ModelViewSet):
     
     def get_permissions(self):
 
-        if self.action == 'register':
+        if self.action == ViewAction.REGISTER:
             return [AllowAny()]
-        elif self.action in ['update', 'partial_update', 'destroy']:
+        elif self.action in [ViewAction.UPDATE, ViewAction.PARTIAL_UPDATE, ViewAction.DESTROY]:
             return [IsOwnerOrAdmin()]
         return super().get_permissions()
     
@@ -180,7 +181,7 @@ class SaleViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']
     
     def get_serializer_class(self):
-        if self.action == 'list':
+        if self.action == ViewAction.LIST:
             return SaleListSerializer
         return SaleSerializer
     
@@ -204,7 +205,7 @@ class SaleViewSet(viewsets.ModelViewSet):
     
     def get_permissions(self):
 
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+        if self.action in [ViewAction.CREATE, ViewAction.UPDATE, ViewAction.PARTIAL_UPDATE, ViewAction.DESTROY]:
             return [IsAdminUser()]
         return super().get_permissions()
     

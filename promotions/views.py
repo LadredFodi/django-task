@@ -1,4 +1,4 @@
-from rest_framework import viewsets, filters, status
+from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
@@ -12,6 +12,7 @@ from promotions.serializers import (
 from promotions.filters import PromotionFilter, PromotionDealershipFilter, PromotionSupplierFilter
 from promotions.services import PromotionService, PromotionDealershipService, PromotionSupplierService
 from config.permissions import IsAdminOrReadOnly, IsAdminUser
+from config.enums import ViewAction
 
 
 class PromotionViewSet(viewsets.ModelViewSet):
@@ -24,7 +25,7 @@ class PromotionViewSet(viewsets.ModelViewSet):
     ordering = ['-start_date']
     
     def get_serializer_class(self):
-        if self.action == 'list':
+        if self.action == ViewAction.LIST:
             return PromotionListSerializer
         return PromotionSerializer
     

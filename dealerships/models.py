@@ -3,12 +3,9 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django_countries.fields import CountryField
 from config.models import BaseModel
 
-try:
-    from django.contrib.gis.db.models import PointField
-    HAS_GIS = True
-except (ImportError, Exception):
-    PointField = models.JSONField
-    HAS_GIS = False
+
+from django.contrib.gis.db.models import PointField
+   
 
 
 
@@ -19,22 +16,13 @@ class Dealership(BaseModel):
     country = CountryField(verbose_name="Country")
     city = models.CharField(max_length=128, verbose_name="City")
     address = models.CharField(max_length=256, verbose_name="Address")
-    if HAS_GIS:
-        location = PointField(
-            verbose_name="Coordinates",
-            geography=True,
-            null=True,
-            blank=True,
-            help_text="Geographic coordinates of the dealership (longitude, latitude)",
-        )
-    else:
-        location = models.JSONField(
-            verbose_name="Coordinates",
-            null=True,
-            blank=True,
-            default=None,
-            help_text="Geographic coordinates as JSON: {'longitude': x, 'latitude': y}",
-        )
+    location = PointField(
+        verbose_name="Coordinates",
+        geography=True,
+        null=True,
+        blank=True,
+        help_text="Geographic coordinates of the dealership (longitude, latitude)",
+    )
 
     email = models.EmailField(verbose_name="Email", unique=True)
     phone = models.CharField(max_length=32, verbose_name="Phone")

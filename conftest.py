@@ -1,18 +1,14 @@
 import pytest
 from decimal import Decimal
 from django.contrib.auth.models import User
-try:
-    from django.contrib.gis.geos import Point
-    HAS_GIS = True
-except (ImportError, Exception):
-    HAS_GIS = False
-    Point = None
+from django.contrib.gis.geos import Point
 from django.utils import timezone
 from django.db import connection
 from datetime import timedelta
 from faker import Faker
 from rest_framework.test import APIClient
 
+from django.apps import apps
 from cars.models import CarModel
 from customers.models import Customer, Sale
 from dealerships.models import Dealership, DealershipInventory, DealershipPreference, Purchase
@@ -21,25 +17,6 @@ from promotions.models import Promotion, PromotionDealership, PromotionSupplier
 from offers.models import Offer
 
 fake = Faker()
-
-
-@pytest.fixture(scope='session')
-def django_db_setup(django_db_blocker):
-    
-    with django_db_blocker.unblock():
-        table_names = connection.introspection.table_names()
-        
-        if not table_names or 'cars_carmodel' not in table_names:
-            with connection.schema_editor() as schema_editor:
-                from django.apps import apps
-                
-                for model in apps.get_models():
-                    try:
-                        if model._meta.db_table not in table_names:
-                            schema_editor.create_model(model)
-                    except Exception as e:
-                        pass
-
 
 @pytest.fixture
 def api_client():
@@ -164,19 +141,16 @@ def customer_factory(db, user_factory):
 
 @pytest.fixture
 def dealership(db):
-    data = {
-        'name': 'Best Cars Dealership',
-        'country': 'US',
-        'city': 'Los Angeles',
-        'address': '456 Auto Street',
-        'email': 'bestcars@test.com',
-        'phone': '+1987654321',
-        'balance': Decimal('100000.00')
-    }
-    if HAS_GIS and Point:
-        data['location'] = Point(-118.2437, 34.0522)
-    
-    return Dealership.objects.create(**data)
+    return Dealership.objects.create(
+        name='Best Cars Dealership',
+        country='US',
+        city='Los Angeles',
+        address='456 Auto Street',
+        email='bestcars@test.com',
+        phone='+1987654321',
+        balance=Decimal('100000.00'),
+        location=Point(-118.2437, 34.0522, srid=4326)
+    )
 
 
 @pytest.fixture
@@ -191,8 +165,10 @@ def dealership_factory(db):
             'phone': fake.phone_number(),
             'balance': Decimal(str(fake.random_int(min=50000, max=500000))),
         }
-        if HAS_GIS and Point and 'location' not in kwargs:
-            defaults['location'] = Point(fake.longitude(), fake.latitude())
+        if 'location' not in kwargs:
+            lon = float(fake.longitude())
+            lat = float(fake.latitude())
+            defaults['location'] = Point(lon, lat, srid=4326)
         
         defaults.update(kwargs)
         return Dealership.objects.create(**defaults)

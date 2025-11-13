@@ -18,9 +18,10 @@ from dealerships.filters import (
 )
 from dealerships.services import (
     DealershipService, DealershipInventoryService,
-    PurchaseService, DealershipPreferenceService
+    PurchaseService
 )
 from config.permissions import IsAdminOrReadOnly, IsAdminUser
+from config.enums import ViewAction
 
 
 class DealershipViewSet(viewsets.ModelViewSet):
@@ -34,7 +35,7 @@ class DealershipViewSet(viewsets.ModelViewSet):
     ordering = ['name']
     
     def get_serializer_class(self):
-        if self.action == 'list':
+        if self.action == ViewAction.LIST:
             return DealershipListSerializer
         return DealershipSerializer
     
@@ -156,7 +157,7 @@ class DealershipInventoryViewSet(viewsets.ModelViewSet):
     ordering = ['-quantity']
     
     def get_serializer_class(self):
-        if self.action == 'list':
+        if self.action == ViewAction.LIST:
             return DealershipInventoryListSerializer
         return DealershipInventorySerializer
     
@@ -192,7 +193,7 @@ class PurchaseViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']
     
     def get_serializer_class(self):
-        if self.action == 'list':
+        if self.action == ViewAction.LIST:
             return PurchaseListSerializer
         return PurchaseSerializer
     
