@@ -1,3 +1,5 @@
+from enum import Enum
+
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -11,7 +13,7 @@ from offers.services import OfferService
 from config.permissions import IsAdminUser, IsEmailVerified, IsOwnerOrAdmin
 from customers.models import Customer
 from customers.services import CustomerService
-
+from config.enums import ViewAction
 
 class OfferViewSet(viewsets.ModelViewSet):
 
@@ -28,9 +30,9 @@ class OfferViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']
     
     def get_serializer_class(self):
-        if self.action == 'create':
+        if self.action == ViewAction.CREATE:
             return OfferCreateSerializer
-        elif self.action == 'list':
+        elif self.action == ViewAction.LIST:
             return OfferListSerializer
         return OfferSerializer
     
@@ -54,12 +56,14 @@ class OfferViewSet(viewsets.ModelViewSet):
     
     def get_permissions(self):
 
-        if self.action == 'create':
+        if self.action == ViewAction.CREATE:
             return [IsAuthenticated(), IsEmailVerified()]
-        elif self.action in ['update', 'partial_update', 'destroy']:
+        elif self.action in [ViewAction.UPDATE, ViewAction.PARTIAL_UPDATE, ViewAction.DESTROY]:
             return [IsOwnerOrAdmin()]
-        elif self.action in ['process', 'complete', 'cancel']:
+        elif self.action in [ViewAction.PROCESS, ViewAction.COMPLETE]:
             return [IsAdminUser()]
+        elif self.action == ViewAction.CANCEL:
+            return [IsAuthenticated()]
         return super().get_permissions()
     
     def perform_destroy(self, instance):
@@ -141,7 +145,7 @@ class OfferViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], permission_classes=[IsAdminUser])
     def statistics(self, request):
-        stats = OfferService.get_offers_statistics()
+        stats = OfferService.get_statistics()
         return Response(stats)
     
     @action(detail=True, methods=['get'])

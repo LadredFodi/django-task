@@ -8,7 +8,7 @@ from cars.serializers import CarModelSerializer, CarModelListSerializer
 from cars.filters import CarModelFilter
 from cars.services import CarModelService
 from config.permissions import IsAdminOrReadOnly
-
+from config.enums import ViewAction
 
 class CarModelViewSet(viewsets.ModelViewSet):
 
@@ -21,7 +21,7 @@ class CarModelViewSet(viewsets.ModelViewSet):
     ordering = ['-year', 'brand', 'model']
     
     def get_serializer_class(self):
-        if self.action == 'list':
+        if self.action == ViewAction.LIST:
             return CarModelListSerializer
         return CarModelSerializer
     

@@ -11,9 +11,9 @@ from suppliers.serializers import (
     SupplierDiscountSerializer, SupplierStatisticsSerializer
 )
 from suppliers.filters import SupplierFilter, SupplierCarFilter, SupplierDiscountFilter
-from suppliers.services import SupplierService, SupplierCarService, SupplierDiscountService
+from suppliers.services import SupplierService, SupplierCarService
 from config.permissions import IsAdminOrReadOnly, IsAdminUser
-
+from config.enums import ViewAction
 
 class SupplierViewSet(viewsets.ModelViewSet):
     queryset = Supplier.objects.all()
@@ -25,7 +25,7 @@ class SupplierViewSet(viewsets.ModelViewSet):
     ordering = ['-rating', 'name']
     
     def get_serializer_class(self):
-        if self.action == 'list':
+        if self.action == ViewAction.LIST:
             return SupplierListSerializer
         return SupplierSerializer
     
@@ -69,7 +69,7 @@ class SupplierCarViewSet(viewsets.ModelViewSet):
     ordering = ['price']
     
     def get_serializer_class(self):
-        if self.action == 'list':
+        if self.action == ViewAction.LIST:
             return SupplierCarListSerializer
         return SupplierCarSerializer
     

@@ -1,8 +1,11 @@
 from django.db import models
-from django.contrib.gis.db.models import PointField
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django_countries.fields import CountryField
 from config.models import BaseModel
+
+
+from django.contrib.gis.db.models import PointField
+   
 
 
 

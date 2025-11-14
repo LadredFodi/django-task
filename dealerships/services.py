@@ -1,10 +1,12 @@
 from django.db.models import Count, Sum, Avg, QuerySet
-from django.contrib.gis.geos import Point
-from django.contrib.gis.measure import Distance
 from django.utils import timezone
 from typing import Optional, Any
 from decimal import Decimal
 from dealerships.models import Dealership, DealershipPreference, DealershipInventory, Purchase
+
+from django.contrib.gis.geos import Point
+from django.contrib.gis.measure import Distance
+from django.contrib.gis.db.models.functions import Distance as DistanceFunction
 
 
 class DealershipService:
@@ -128,7 +130,7 @@ class DealershipService:
             is_active=True,
             location__distance_lte=(point, Distance(km=radius))
         ).annotate(
-            distance=Distance('location', point)
+            distance=DistanceFunction('location', point)
         ).order_by('distance')
 
 
