@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import JsonResponse
 from rest_framework import permissions
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -24,6 +25,10 @@ from config.authentication import (
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
+
+def health_check(request):
+    return JsonResponse({"status": "ok"})
+
 schema_view = get_schema_view(
     openapi.Info(
         title="Dealership Management API",
@@ -34,6 +39,9 @@ schema_view = get_schema_view(
 
 
 urlpatterns = [
+    # Health check
+    path("health/", health_check, name="health_check"),
+    
     # Admin
     path("admin/", admin.site.urls),
     
