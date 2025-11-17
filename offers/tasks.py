@@ -1,3 +1,5 @@
+"""Celery tasks for automated offer processing and matching."""
+
 from decimal import Decimal
 from typing import List, Dict, Any, Optional
 from django.db import transaction
@@ -12,6 +14,18 @@ from customers.models import Sale
 
 @shared_task(name='config.tasks.process_customer_offer')
 def process_customer_offer(offer_id: int):
+    """
+    Celery task to process a single customer offer.
+
+    Finds matching dealerships, selects the best match, and executes the purchase
+    if customer has sufficient funds.
+
+    Args:
+        offer_id: ID of the offer to process.
+
+    Returns:
+        dict: Result dictionary with success status and details.
+    """
 
     try:
         offer = Offer.objects.select_related(
@@ -73,6 +87,15 @@ def process_customer_offer(offer_id: int):
 
 
 def _find_matching_dealerships(offer: Offer) -> List[Dict[str, Any]]:
+    """
+    Find dealerships that can fulfill the offer within the price limit.
+
+    Args:
+        offer: Offer instance to match.
+
+    Returns:
+        List of matching dealerships sorted by final price (lowest first).
+    """
 
     now = timezone.now()
     
@@ -130,6 +153,18 @@ def _find_matching_dealerships(offer: Offer) -> List[Dict[str, Any]]:
 
 
 def _execute_purchase(offer: Offer, dealership_match: Dict[str, Any]) -> Optional[Sale]:
+    """
+    Execute the purchase transaction for a matched offer.
+
+    Updates: Sale, Customer balance/stats, Dealership balance/stats, Inventory quantity.
+
+    Args:
+        offer: Offer being fulfilled.
+        dealership_match: Selected dealership match details.
+
+    Returns:
+        Created Sale instance or None if failed.
+    """
     try:
         with transaction.atomic():
             dealership = Dealership.objects.select_for_update().get(

@@ -1,9 +1,12 @@
+"""Serializers for dealership, inventory, and purchase models."""
+
 from rest_framework import serializers
 from dealerships.models import Dealership, DealershipPreference, DealershipInventory, Purchase
 from cars.serializers import CarModelListSerializer
 
 
 class DealershipSerializer(serializers.ModelSerializer):
+    """Detailed serializer for Dealership with location coordinates."""
     
     country_name = serializers.CharField(source='country.name', read_only=True)
     location_latitude = serializers.SerializerMethodField()
@@ -36,17 +39,20 @@ class DealershipSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'total_sales', 'total_revenue', 'total_profit', 'created_at', 'updated_at']
     
     def get_location_latitude(self, obj):
+        """Extract latitude from PostGIS Point field."""
         if obj.location:
             return obj.location.y
         return None
     
     def get_location_longitude(self, obj):
+        """Extract longitude from PostGIS Point field."""
         if obj.location:
             return obj.location.x
         return None
 
 
 class DealershipListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for Dealership list views."""
 
     country_name = serializers.CharField(source='country.name', read_only=True)
     
@@ -65,6 +71,7 @@ class DealershipListSerializer(serializers.ModelSerializer):
 
 
 class DealershipPreferenceSerializer(serializers.ModelSerializer):
+    """Serializer for DealershipPreference model."""
 
     dealership_name = serializers.CharField(source='dealership.name', read_only=True)
     
@@ -87,6 +94,7 @@ class DealershipPreferenceSerializer(serializers.ModelSerializer):
 
 
 class DealershipInventorySerializer(serializers.ModelSerializer):
+    """Detailed serializer for DealershipInventory with profit margin calculation."""
 
     dealership_name = serializers.CharField(source='dealership.name', read_only=True)
     car_model_detail = CarModelListSerializer(source='car_model', read_only=True)
@@ -113,12 +121,14 @@ class DealershipInventorySerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'times_sold', 'last_sale_date', 'created_at', 'updated_at']
     
     def get_profit_margin(self, obj):
+        """Calculate profit margin percentage."""
         if obj.purchase_price > 0:
             return float(((obj.selling_price - obj.purchase_price) / obj.purchase_price) * 100)
         return 0
 
 
 class DealershipInventoryListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for DealershipInventory list views."""
 
     dealership_name = serializers.CharField(source='dealership.name', read_only=True)
     car_brand = serializers.CharField(source='car_model.brand', read_only=True)
@@ -142,6 +152,7 @@ class DealershipInventoryListSerializer(serializers.ModelSerializer):
 
 
 class PurchaseSerializer(serializers.ModelSerializer):
+    """Detailed serializer for Purchase with validation."""
 
     dealership_name = serializers.CharField(source='dealership.name', read_only=True)
     supplier_name = serializers.CharField(source='supplier.name', read_only=True)
@@ -172,7 +183,7 @@ class PurchaseSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'updated_at']
     
     def validate(self, data):
-
+        """Validate purchase total price matches quantity × unit price."""
         quantity = data.get('quantity')
         unit_price = data.get('unit_price')
         total_price = data.get('total_price')
@@ -188,6 +199,7 @@ class PurchaseSerializer(serializers.ModelSerializer):
 
 
 class PurchaseListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for Purchase list views."""
 
     dealership_name = serializers.CharField(source='dealership.name', read_only=True)
     supplier_name = serializers.CharField(source='supplier.name', read_only=True)
@@ -212,7 +224,8 @@ class PurchaseListSerializer(serializers.ModelSerializer):
 
 
 class DealershipStatisticsSerializer(serializers.Serializer):
-  
+    """Serializer for dealership statistics and analytics."""
+
     balance = serializers.DecimalField(max_digits=16, decimal_places=2)
     total_sales = serializers.IntegerField()
     total_revenue = serializers.DecimalField(max_digits=16, decimal_places=2)
@@ -232,6 +245,7 @@ class DealershipStatisticsSerializer(serializers.Serializer):
 
 
 class PurchaseStatisticsSerializer(serializers.Serializer):
+    """Serializer for purchase statistics and analytics."""
 
     total_purchases = serializers.IntegerField()
     total_quantity = serializers.IntegerField()

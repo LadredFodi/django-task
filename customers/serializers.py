@@ -1,3 +1,5 @@
+"""Serializers for customer and sale models."""
+
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from customers.models import Customer, Sale
@@ -14,6 +16,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class CustomerSerializer(serializers.ModelSerializer):
+    """Detailed Customer serializer with user details and statistics."""
 
     user_details = UserSerializer(source='user', read_only=True)
     country_name = serializers.CharField(source='country.name', read_only=True)
@@ -49,6 +52,7 @@ class CustomerSerializer(serializers.ModelSerializer):
 
 
 class CustomerListSerializer(serializers.ModelSerializer):
+    """Lightweight Customer serializer for list views."""
 
     username = serializers.CharField(source='user.username', read_only=True)
     email = serializers.CharField(source='user.email', read_only=True)
@@ -71,6 +75,7 @@ class CustomerListSerializer(serializers.ModelSerializer):
 
 
 class SaleSerializer(serializers.ModelSerializer):
+    """Detailed Sale serializer with related object details and validation."""
 
     dealership_name = serializers.CharField(source='dealership.name', read_only=True)
     customer_username = serializers.CharField(source='customer.user.username', read_only=True)
@@ -104,7 +109,7 @@ class SaleSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'updated_at']
     
     def validate(self, data):
-
+        """Validate sale price and discount calculations."""
         price = data.get('price')
         original_price = data.get('original_price')
         discount_applied = data.get('discount_applied', 0)
@@ -125,6 +130,7 @@ class SaleSerializer(serializers.ModelSerializer):
 
 
 class SaleListSerializer(serializers.ModelSerializer):
+    """Lightweight Sale serializer for list views."""
 
     dealership_name = serializers.CharField(source='dealership.name', read_only=True)
     customer_username = serializers.CharField(source='customer.user.username', read_only=True)
@@ -151,6 +157,7 @@ class SaleListSerializer(serializers.ModelSerializer):
 
 
 class CustomerRegistrationSerializer(serializers.ModelSerializer):
+    """Serializer for customer registration with validation."""
 
     username = serializers.CharField(write_only=True)
     email = serializers.EmailField(write_only=True)
@@ -201,6 +208,7 @@ class CustomerRegistrationSerializer(serializers.ModelSerializer):
 
 
 class CustomerStatisticsSerializer(serializers.Serializer):
+    """Serializer for customer statistics and analytics."""
 
     customer_id = serializers.IntegerField()
     username = serializers.CharField()
@@ -222,6 +230,7 @@ class CustomerStatisticsSerializer(serializers.Serializer):
 
 
 class SaleStatisticsSerializer(serializers.Serializer):
+    """Serializer for sales statistics and analytics."""
 
     overall = serializers.DictField()
     

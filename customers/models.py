@@ -1,3 +1,5 @@
+"""Customer models for the Dealership Management System."""
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -6,6 +8,8 @@ from config.models import BaseModel
 
 
 class Customer(BaseModel):
+    """Customer profile model with purchase tracking and loyalty features."""
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="customer_profile", verbose_name="User")
 
     phone = models.CharField(max_length=32, verbose_name="Phone", blank=True, null=True)
@@ -58,6 +62,8 @@ class Customer(BaseModel):
 
  
 class Sale(BaseModel):
+    """Sale record linking customer, dealership, and car model with pricing details."""
+
     dealership = models.ForeignKey(
         "dealerships.Dealership", on_delete=models.CASCADE, related_name="sales", verbose_name="Dealership"
     )

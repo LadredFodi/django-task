@@ -1,9 +1,12 @@
+"""Serializers for supplier and catalog models."""
+
 from rest_framework import serializers
 from suppliers.models import Supplier, SupplierCar, SupplierDiscount
 from cars.serializers import CarModelListSerializer
 
 
 class SupplierSerializer(serializers.ModelSerializer):
+    """Detailed serializer for Supplier with annotated car count."""
 
     country_name = serializers.CharField(source='country.name', read_only=True)
     total_cars = serializers.IntegerField(read_only=True)
@@ -32,6 +35,8 @@ class SupplierSerializer(serializers.ModelSerializer):
 
 
 class SupplierListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for Supplier list views."""
+
     country_name = serializers.CharField(source='country.name', read_only=True)
     
     class Meta:
@@ -49,6 +54,8 @@ class SupplierListSerializer(serializers.ModelSerializer):
 
 
 class SupplierCarSerializer(serializers.ModelSerializer):
+    """Detailed serializer for SupplierCar with related car model details."""
+
     supplier_name = serializers.CharField(source='supplier.name', read_only=True)
     car_model_detail = CarModelListSerializer(source='car_model', read_only=True)
     
@@ -74,6 +81,8 @@ class SupplierCarSerializer(serializers.ModelSerializer):
 
 
 class SupplierCarListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for SupplierCar list views."""
+
     supplier_name = serializers.CharField(source='supplier.name', read_only=True)
     car_brand = serializers.CharField(source='car_model.brand', read_only=True)
     car_model_name = serializers.CharField(source='car_model.model', read_only=True)
@@ -97,6 +106,8 @@ class SupplierCarListSerializer(serializers.ModelSerializer):
 
 
 class SupplierDiscountSerializer(serializers.ModelSerializer):
+    """Serializer for SupplierDiscount with related names."""
+
     supplier_name = serializers.CharField(source='supplier.name', read_only=True)
     dealership_name = serializers.CharField(source='dealership.name', read_only=True)
     
@@ -119,6 +130,7 @@ class SupplierDiscountSerializer(serializers.ModelSerializer):
 
 
 class SupplierStatisticsSerializer(serializers.Serializer):
+    """Serializer for supplier statistics and analytics."""
 
     supplier_id = serializers.IntegerField()
     supplier_name = serializers.CharField()

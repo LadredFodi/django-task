@@ -1,3 +1,5 @@
+"""Offer models for customer purchase offers and dealership matching."""
+
 from django.db import models
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
@@ -5,6 +7,12 @@ from config.models import BaseModel
 
 
 class Offer(BaseModel):
+    """
+    Model representing a customer's purchase offer.
+
+    Tracks offer status, matching results, and dealership matching process.
+    Includes automated matching system with dealerships based on price and availability.
+    """
 
     STATUS_CHOICES = [
         ("pending", "Pending"),

@@ -1,3 +1,5 @@
+"""Email service for account-related notifications."""
+
 from __future__ import annotations
 
 from typing import Any, Dict
@@ -13,17 +15,43 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 
 class AccountEmailService:
+    """
+    Service class for sending account-related emails.
+
+    Handles email verification, password reset, email changes, and username changes.
+    Uses Django's token system for secure email operations.
+    """
 
     EMAIL_CHANGE_SALT = "account/email-change"
     USERNAME_CHANGE_SALT = "account/username-change"
 
     @staticmethod
     def _build_absolute_url(path: str) -> str:
+        """
+        Build absolute URL from relative path.
+
+        Args:
+            path: Relative URL path.
+
+        Returns:
+            Complete absolute URL.
+        """
         base = settings.SITE_URL.rstrip("/")
         return urljoin(f"{base}/", path.lstrip("/"))
 
     @staticmethod
     def _send_mail(subject: str, message: str, recipient: str) -> None:
+        """
+        Send an email to a recipient.
+
+        Args:
+            subject: Email subject line.
+            message: Email message body.
+            recipient: Recipient email address.
+
+        Raises:
+            SMTPException: If email sending fails.
+        """
         send_mail(
             subject,
             message,
@@ -34,6 +62,18 @@ class AccountEmailService:
 
     @classmethod
     def send_email_verification(cls, user: User) -> str:
+        """
+        Send email verification link to user.
+
+        Args:
+            user: User instance to send verification email to.
+
+        Returns:
+            Generated verification link.
+
+        Raises:
+            SMTPException: If email sending fails.
+        """
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
         verification_link = cls._build_absolute_url(
@@ -53,6 +93,18 @@ class AccountEmailService:
 
     @classmethod
     def send_password_reset_email(cls, user: User) -> str:
+        """
+        Send password reset link to user.
+
+        Args:
+            user: User instance requesting password reset.
+
+        Returns:
+            Generated password reset link.
+
+        Raises:
+            SMTPException: If email sending fails.
+        """
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
         reset_link = cls._build_absolute_url(
@@ -72,6 +124,19 @@ class AccountEmailService:
 
     @classmethod
     def send_email_change_confirmation(cls, user: User, new_email: str) -> str:
+        """
+        Send email change confirmation link to new email address.
+
+        Args:
+            user: User instance requesting email change.
+            new_email: New email address to confirm.
+
+        Returns:
+            Generated confirmation token.
+
+        Raises:
+            SMTPException: If email sending fails.
+        """
         payload: Dict[str, Any] = {"user_id": user.pk, "new_email": new_email}
         token = signing.dumps(payload, salt=cls.EMAIL_CHANGE_SALT)
         confirmation_link = cls._build_absolute_url(
@@ -91,6 +156,19 @@ class AccountEmailService:
 
     @classmethod
     def parse_email_change_token(cls, token: str) -> Dict[str, Any]:
+        """
+        Parse and validate email change confirmation token.
+
+        Args:
+            token: Email change confirmation token.
+
+        Returns:
+            Dictionary with user_id and new_email.
+
+        Raises:
+            SignatureExpired: If token has expired.
+            BadSignature: If token is invalid.
+        """
         return signing.loads(
             token,
             salt=cls.EMAIL_CHANGE_SALT,
@@ -99,6 +177,19 @@ class AccountEmailService:
 
     @classmethod
     def send_username_change_confirmation(cls, user: User, new_username: str) -> str:
+        """
+        Send username change confirmation link to user's email.
+
+        Args:
+            user: User instance requesting username change.
+            new_username: New username to confirm.
+
+        Returns:
+            Generated confirmation token.
+
+        Raises:
+            SMTPException: If email sending fails.
+        """
         payload: Dict[str, Any] = {"user_id": user.pk, "new_username": new_username}
         token = signing.dumps(payload, salt=cls.USERNAME_CHANGE_SALT)
         confirmation_link = cls._build_absolute_url(
@@ -119,6 +210,19 @@ class AccountEmailService:
 
     @classmethod
     def parse_username_change_token(cls, token: str) -> Dict[str, Any]:
+        """
+        Parse and validate username change confirmation token.
+
+        Args:
+            token: Username change confirmation token.
+
+        Returns:
+            Dictionary with user_id and new_username.
+
+        Raises:
+            SignatureExpired: If token has expired.
+            BadSignature: If token is invalid.
+        """
         return signing.loads(
             token,
             salt=cls.USERNAME_CHANGE_SALT,

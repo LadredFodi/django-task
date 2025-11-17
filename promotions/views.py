@@ -1,3 +1,5 @@
+"""API views for promotions and discount management."""
+
 from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -16,6 +18,8 @@ from config.enums import ViewAction
 
 
 class PromotionViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing promotions."""
+
     queryset = Promotion.objects.prefetch_related('car_models').all()
     permission_classes = [IsAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -81,6 +85,8 @@ class PromotionViewSet(viewsets.ModelViewSet):
 
 
 class PromotionDealershipViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing promotions applied to specific dealerships."""
+
     queryset = PromotionDealership.objects.select_related('promotion', 'dealership').all()
     serializer_class = PromotionDealershipSerializer
     permission_classes = [IsAdminUser]
@@ -108,6 +114,8 @@ class PromotionDealershipViewSet(viewsets.ModelViewSet):
 
 
 class PromotionSupplierViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing promotions applied to specific suppliers."""
+
     queryset = PromotionSupplier.objects.select_related('promotion', 'supplier').all()
     serializer_class = PromotionSupplierSerializer
     permission_classes = [IsAdminUser]

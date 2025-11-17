@@ -1,3 +1,5 @@
+"""API views for suppliers and supplier catalog management."""
+
 from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -16,6 +18,8 @@ from config.permissions import IsAdminOrReadOnly, IsAdminUser
 from config.enums import ViewAction
 
 class SupplierViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing supplier profiles with statistics."""
+
     queryset = Supplier.objects.all()
     permission_classes = [IsAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -60,6 +64,8 @@ class SupplierViewSet(viewsets.ModelViewSet):
 
 
 class SupplierCarViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing cars offered by suppliers."""
+
     queryset = SupplierCar.objects.select_related('supplier', 'car_model').all()
     permission_classes = [IsAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -89,6 +95,8 @@ class SupplierCarViewSet(viewsets.ModelViewSet):
 
 
 class SupplierDiscountViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing supplier loyalty discounts."""
+
     queryset = SupplierDiscount.objects.select_related('supplier', 'dealership').all()
     permission_classes = [IsAdminUser]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]

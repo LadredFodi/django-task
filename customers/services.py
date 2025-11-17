@@ -1,3 +1,5 @@
+"""Service layer for customer and sale operations."""
+
 from django.db.models import Count, Sum, Avg, Q, QuerySet
 from django.contrib.auth.models import User
 from typing import Optional, Any
@@ -8,13 +10,15 @@ from dealerships.models import DealershipInventory
 
 
 class CustomerService:
-    
+    """Service class for customer management and operations."""
+
     @staticmethod
     def get_all_active_customers() -> QuerySet[Customer]:
         return Customer.objects.select_related('user').filter(is_active=True)
     
     @staticmethod
     def get_customer_by_id(customer_id: int) -> Optional[Customer]:
+        """Get active customer by ID."""
         try:
             return Customer.objects.select_related('user').get(
                 id=customer_id,
@@ -25,6 +29,7 @@ class CustomerService:
     
     @staticmethod
     def get_customer_by_user(user: User) -> Optional[Customer]:
+        """Get customer profile for a user."""
         try:
             return user.customer_profile
         except Customer.DoesNotExist:
@@ -32,14 +37,17 @@ class CustomerService:
     
     @staticmethod
     def get_by_user(user: User) -> Optional[Customer]:
+        """Alias for get_customer_by_user."""
         return CustomerService.get_customer_by_user(user)
     
     @staticmethod
     def create_customer(user: User, **kwargs: Any) -> Customer:
+        """Create new customer profile for a user."""
         return Customer.objects.create(user=user, **kwargs)
     
     @staticmethod
     def update_customer(customer: Customer, data: dict[str, Any]) -> Customer:
+        """Update customer profile with provided data."""
         for key, value in data.items():
             setattr(customer, key, value)
         customer.save()
@@ -47,18 +55,21 @@ class CustomerService:
     
     @staticmethod
     def update_balance(customer: Customer, amount: Decimal) -> Customer:
+        """Update customer balance (add or subtract amount)."""
         customer.balance += amount
         customer.save(update_fields=['balance', 'updated_at'])
         return customer
     
     @staticmethod
     def verify_email(customer: Customer) -> Customer:
+        """Mark customer email as verified."""
         customer.email_verified = True
         customer.save(update_fields=['email_verified', 'updated_at'])
         return customer
     
     @staticmethod
     def get_statistics(customer: Customer) -> dict:
+        """Get comprehensive statistics for a customer."""
         purchases_stats = customer.purchases.filter(is_active=True).aggregate(
             total_count=Count('id'),
             total_spent=Sum('price'),
@@ -120,6 +131,7 @@ class CustomerService:
     
     @staticmethod
     def get_vip_customers() -> QuerySet[Customer]:
+        """Get VIP and premium customers ordered by total spent."""
         return Customer.objects.filter(
             Q(customer_type='vip') | Q(customer_type='premium'),
             is_active=True
@@ -127,6 +139,7 @@ class CustomerService:
     
     @staticmethod
     def register_user(username: str, email: str, password: str, **kwargs: Any) -> Customer:
+        """Register a new user and create customer profile."""
         user = User.objects.create_user(
             username=username,
             email=email,
@@ -140,15 +153,18 @@ class CustomerService:
 
 
 class SaleService:
-    
+    """Service class for sale management and statistics."""
+
     @staticmethod
     def get_all_active_sales() -> QuerySet[Sale]:
+        """Get all active sales with related data."""
         return Sale.objects.select_related('dealership', 'customer', 'car_model').filter(
             is_active=True
         )
     
     @staticmethod
     def get_sales_by_customer(customer: Customer) -> QuerySet[Sale]:
+        """Get all sales for a specific customer."""
         return Sale.objects.filter(
             customer=customer,
             is_active=True
@@ -156,6 +172,7 @@ class SaleService:
     
     @staticmethod
     def get_sales_by_dealership(dealership_id: int) -> QuerySet[Sale]:
+        """Get all sales for a specific dealership."""
         return Sale.objects.filter(
             dealership_id=dealership_id,
             is_active=True
@@ -163,6 +180,7 @@ class SaleService:
     
     @staticmethod
     def create_sale(data: dict[str, Any]) -> Sale:
+        """Create a sale and update related customer and dealership records."""
         sale = Sale.objects.create(**data)
         
         customer = sale.customer
@@ -191,6 +209,7 @@ class SaleService:
     
     @staticmethod
     def get_sales_statistics() -> dict:
+        """Get comprehensive sales statistics and analytics."""
         queryset = Sale.objects.filter(is_active=True)
         
         stats = queryset.aggregate(

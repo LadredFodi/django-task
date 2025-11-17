@@ -1,3 +1,5 @@
+"""Service layer for supplier operations and business logic."""
+
 from django.db.models import Count, Sum, Q, Avg, Min, QuerySet
 from typing import Optional, Any
 from suppliers.models import Supplier, SupplierCar, SupplierDiscount
@@ -6,15 +8,17 @@ from dealerships.services import PurchaseService
 from django.utils import timezone
 
 class SupplierService:
-    
+    """Service class for supplier management operations."""
     @staticmethod
     def get_all_active_suppliers() -> QuerySet[Supplier]:
+        """Get all active suppliers with car count annotation."""
         return Supplier.objects.filter(is_active=True).annotate(
             total_cars=Count('supplier_cars', filter=Q(supplier_cars__is_active=True))
         )
     
     @staticmethod
     def get_supplier_by_id(supplier_id: int) -> Optional[Supplier]:
+        """Get supplier by ID if active."""
         try:
             return Supplier.objects.get(id=supplier_id, is_active=True)
         except Supplier.DoesNotExist:
@@ -22,10 +26,12 @@ class SupplierService:
     
     @staticmethod
     def create_supplier(data: dict[str, Any]) -> Supplier:
+        """Create new supplier."""
         return Supplier.objects.create(**data)
     
     @staticmethod
     def update_supplier(supplier: Supplier, data: dict[str, Any]) -> Supplier:
+        """Update supplier with provided data."""
         for key, value in data.items():
             setattr(supplier, key, value)
         supplier.save()
@@ -108,9 +114,11 @@ class SupplierService:
 
 
 class SupplierCarService:
-    
+    """Service class for managing cars offered by suppliers."""
+
     @staticmethod
     def get_all_active_supplier_cars() -> QuerySet[SupplierCar]:
+        """Get all active supplier cars with related data."""
         return SupplierCar.objects.select_related('supplier', 'car_model').filter(
             is_active=True,
             supplier__is_active=True
@@ -125,10 +133,12 @@ class SupplierCarService:
     
     @staticmethod
     def create_supplier_car(data: dict[str, Any]) -> SupplierCar:
+        """Create new supplier car entry."""
         return SupplierCar.objects.create(**data)
     
     @staticmethod
     def update_supplier_car(supplier_car: SupplierCar, data: dict[str, Any]) -> SupplierCar:
+        """Update supplier car with provided data."""
         for key, value in data.items():
             setattr(supplier_car, key, value)
         supplier_car.save()
@@ -167,6 +177,7 @@ class SupplierDiscountService:
     
     @staticmethod
     def update_discount(discount: SupplierDiscount, data: dict[str, Any]) -> SupplierDiscount:
+        """Update supplier discount with provided data."""
         for key, value in data.items():
             setattr(discount, key, value)
         discount.save()

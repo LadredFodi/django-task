@@ -1,10 +1,19 @@
+"""Supplier models for managing suppliers and their catalogs."""
+
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django_countries.fields import CountryField
 from config.models import BaseModel
 
 
+
 class Supplier(BaseModel):
+    """
+    Model representing a car supplier company.
+
+    Stores supplier information including rating, sales statistics, and contact details.
+    """
+
     name = models.CharField(max_length=256, verbose_name="Company Name", unique=True, db_index=True)
     country = CountryField(verbose_name="Country")
     founded_year = models.PositiveIntegerField(
@@ -44,6 +53,11 @@ class Supplier(BaseModel):
 
 
 class SupplierCar(BaseModel):
+    """
+    Model representing a car model available from a supplier.
+
+    Tracks pricing, availability, delivery times, and sales statistics.
+    """
 
     supplier = models.ForeignKey(
         Supplier, on_delete=models.CASCADE, related_name="supplier_cars", verbose_name="Supplier"
@@ -85,6 +99,11 @@ class SupplierCar(BaseModel):
 
  
 class SupplierDiscount(BaseModel):
+    """
+    Model representing loyalty discounts from suppliers to dealerships.
+
+    Tracks discount percentages and conditions for long-term partnerships.
+    """
 
     supplier = models.ForeignKey(
         Supplier, on_delete=models.CASCADE, related_name="loyalty_discounts", verbose_name="Supplier"

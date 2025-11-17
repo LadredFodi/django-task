@@ -1,3 +1,4 @@
+"""API views for customer offers and dealership matching."""
 from enum import Enum
 
 from rest_framework import viewsets, filters, status
@@ -16,6 +17,7 @@ from customers.services import CustomerService
 from config.enums import ViewAction
 
 class OfferViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing customer offers and dealership matching."""
 
     queryset = Offer.objects.select_related('customer', 'car_model', 'matched_dealership').all()
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]

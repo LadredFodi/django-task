@@ -1,3 +1,5 @@
+"""Serializers for promotion models."""
+
 from rest_framework import serializers
 from django.utils import timezone
 from promotions.models import Promotion, PromotionDealership, PromotionSupplier
@@ -6,6 +8,8 @@ from promotions.services import PromotionDealershipService, PromotionSupplierSer
 
 
 class PromotionSerializer(serializers.ModelSerializer):
+    """Detailed serializer for Promotion with related car models."""
+
     promotion_type_display = serializers.CharField(source='get_promotion_type_display', read_only=True)
     car_models_detail = CarModelListSerializer(source='car_models', many=True, read_only=True)
     is_active_now = serializers.SerializerMethodField()
@@ -49,6 +53,8 @@ class PromotionSerializer(serializers.ModelSerializer):
 
 
 class PromotionListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for Promotion list views."""
+
     promotion_type_display = serializers.CharField(source='get_promotion_type_display', read_only=True)
     is_active_now = serializers.SerializerMethodField()
     
@@ -73,6 +79,8 @@ class PromotionListSerializer(serializers.ModelSerializer):
 
 
 class PromotionDealershipSerializer(serializers.ModelSerializer):
+    """Serializer for PromotionDealership linking promotions to dealerships."""
+
     promotion_name = serializers.CharField(source='promotion.name', read_only=True)
     dealership_name = serializers.CharField(source='dealership.name', read_only=True)
     
@@ -107,6 +115,8 @@ class PromotionDealershipSerializer(serializers.ModelSerializer):
 
 
 class PromotionSupplierSerializer(serializers.ModelSerializer):
+    """Serializer for PromotionSupplier linking promotions to suppliers."""
+
     promotion_name = serializers.CharField(source='promotion.name', read_only=True)
     supplier_name = serializers.CharField(source='supplier.name', read_only=True)
     

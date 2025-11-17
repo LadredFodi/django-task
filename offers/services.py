@@ -1,3 +1,5 @@
+"""Service layer for offer processing and matching logic."""
+
 from django.db.models import Count, Avg
 from django.utils import timezone
 from typing import Optional, List, Dict, Any
@@ -8,15 +10,18 @@ from dealerships.models import DealershipInventory
 
 
 class OfferService:
+    """Service class for managing customer offers and matching them with dealerships."""
 
     @staticmethod
     def get_all_active_offers() -> QuerySet[Offer]:
+        """Get all active offers with related data."""
         return Offer.objects.select_related('customer', 'car_model', 'matched_dealership').filter(
             is_active=True
         )
     
     @staticmethod
     def get_offer_by_id(offer_id: int) -> Optional[Offer]:
+        """Get offer by ID if active."""
         try:
             return Offer.objects.select_related('customer', 'car_model', 'matched_dealership').get(
                 id=offer_id,
@@ -27,6 +32,7 @@ class OfferService:
     
     @staticmethod
     def get_offers_by_customer(customer: Customer) -> QuerySet[Offer]:
+        """Get all offers for a specific customer."""
         return Offer.objects.filter(
             customer=customer,
             is_active=True
@@ -34,6 +40,7 @@ class OfferService:
     
     @staticmethod
     def get_pending_offers() -> QuerySet[Offer]:
+        """Get all pending offers waiting for processing."""
         return Offer.objects.filter(
             status='pending',
             is_active=True
@@ -41,6 +48,7 @@ class OfferService:
     
     @staticmethod
     def create_offer(customer: Customer, car_model_id: int, max_price: float, **kwargs: Any) -> Offer:
+        """Create new offer and initiate matching process."""
         offer = Offer.objects.create(
             customer=customer,
             car_model_id=car_model_id,
@@ -54,6 +62,7 @@ class OfferService:
     
     @staticmethod
     def search_matching_dealerships(offer: Offer) -> List[Dict[str, Any]]:
+        """Search for dealerships that can fulfill the offer."""
         matching_inventory = DealershipInventory.objects.filter(
             car_model=offer.car_model,
             selling_price__lte=offer.max_price,

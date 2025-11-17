@@ -32,7 +32,46 @@ def health_check(request):
 schema_view = get_schema_view(
     openapi.Info(
         title="Dealership Management API",
-        default_version="v1"),
+        default_version="v1",
+        description="""
+# Dealership Management System API
+
+A comprehensive REST API for managing car dealerships, suppliers, inventory, sales, customers, and promotions.
+
+## Features
+
+- **Authentication**: JWT-based authentication with email verification
+- **Car Models**: Complete car catalog with specifications
+- **Customers**: Customer management with loyalty tracking
+- **Dealerships**: Dealership operations with geolocation
+- **Suppliers**: Supplier management and pricing
+- **Offers**: Smart offer matching system
+- **Promotions**: Flexible promotion and discount management
+- **Sales**: Complete sales workflow with analytics
+
+## Authentication
+
+Most endpoints require authentication. To authenticate:
+
+1. Register: `POST /api/v1/auth/register/`
+2. Login: `POST /api/v1/auth/token/` - получите access и refresh tokens
+3. Use Bearer token: Add `Authorization: Bearer <access_token>` header to requests
+4. Refresh token: `POST /api/v1/auth/token/refresh/` when access token expires
+
+## Permissions
+
+- **Admin**: Full access to all resources (staff users)
+- **Customer**: Access to own resources and read-only access to catalogs
+- **Anonymous**: Limited access to registration and public endpoints
+
+## Rate Limiting
+
+API rate limits apply to prevent abuse. Contact support if you need higher limits.
+        """,
+        terms_of_service="https://www.example.com/terms/",
+        contact=openapi.Contact(email="support@dealership.com"),
+        license=openapi.License(name="Proprietary License"),
+    ),
     public=True,
     permission_classes=(permissions.AllowAny,),
 )

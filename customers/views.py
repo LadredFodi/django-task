@@ -1,3 +1,4 @@
+"""API views for customers and sales."""
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -19,6 +20,7 @@ from config.enums import ViewAction
 
 
 class CustomerViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing customer profiles with registration and statistics."""
 
     queryset = Customer.objects.select_related('user').all()
     permission_classes = [IsAuthenticated]
@@ -165,6 +167,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
 
 
 class SaleViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing sales records with statistics."""
 
     queryset = Sale.objects.select_related('dealership', 'customer', 'car_model').all()
     permission_classes = [IsAuthenticated]

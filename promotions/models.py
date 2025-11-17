@@ -1,9 +1,17 @@
+"""Promotion models for managing discounts and special offers."""
+
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from config.models import BaseModel
 
 
 class Promotion(BaseModel):
+    """
+    Model representing a promotional campaign.
+
+    Defines time-based promotions with configurable discounts that can be
+    applied to specific car models, dealerships, and suppliers.
+    """
 
     PROMOTION_TYPE_CHOICES = [
         ("seasonal", "Seasonal"),
@@ -65,6 +73,12 @@ class Promotion(BaseModel):
 
 
 class PromotionDealership(BaseModel):
+    """
+    Model linking promotions to dealerships with specific discount rates.
+
+    Allows different dealerships to have different discount percentages
+    for the same promotion campaign.
+    """
 
     promotion = models.ForeignKey(
         Promotion, on_delete=models.CASCADE, related_name="dealership_promotions", verbose_name="Promotion"
@@ -105,6 +119,12 @@ class PromotionDealership(BaseModel):
 
 
 class PromotionSupplier(BaseModel):
+    """
+    Model linking promotions to suppliers with specific discount rates.
+
+    Allows different suppliers to have different discount percentages
+    for the same promotion campaign.
+    """
 
     promotion = models.ForeignKey(
         Promotion, on_delete=models.CASCADE, related_name="supplier_promotions", verbose_name="Promotion"

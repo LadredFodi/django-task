@@ -1,3 +1,5 @@
+"""Celery tasks for supplier operations and price updates."""
+
 from decimal import Decimal
 from django.utils import timezone
 from celery import shared_task
@@ -12,6 +14,15 @@ from promotions.models import PromotionSupplier
 
 @shared_task(name='config.tasks.update_supplier_preferences')
 def update_supplier_preferences():
+    """
+    Celery task to update dealership supplier preferences.
+
+    Analyzes current inventory and compares with alternative supplier offers
+    to identify potential cost savings.
+
+    Returns:
+        dict: Summary with count of dealerships that had preference updates.
+    """
     active_dealerships = Dealership.objects.filter(is_active=True)
     updates_count = 0
     
@@ -27,6 +38,15 @@ def update_supplier_preferences():
 
 
 def _update_dealership_supplier_preferences(dealership: Dealership) -> bool:
+    """
+    Update supplier preferences for a single dealership.
+
+    Args:
+        dealership: Dealership instance to update.
+
+    Returns:
+        True if better supplier alternatives were found, False otherwise.
+    """
     inventory_models = dealership.inventory.filter(
         is_active=True,
         quantity__gt=0
@@ -73,6 +93,17 @@ def _update_dealership_supplier_preferences(dealership: Dealership) -> bool:
 def _calculate_potential_price(
     dealership: Dealership, supplier: Supplier, base_price: Decimal
 ) -> Decimal:
+    """
+    Calculate potential price from a supplier including promotions and discounts.
+
+    Args:
+        dealership: Dealership that would purchase.
+        supplier: Supplier offering the car.
+        base_price: Base price before discounts.
+
+    Returns:
+        Final price after applying all applicable discounts.
+    """
     now = timezone.now()
     final_price = base_price
     

@@ -1,3 +1,5 @@
+"""Authentication and user management service layer."""
+
 from __future__ import annotations
 
 import logging
@@ -20,12 +22,29 @@ logger = logging.getLogger(__name__)
 
 
 class AuthService:
+    """
+    Service class handling user authentication and account management.
+
+    Provides methods for user registration, email verification, password management,
+    and account updates including email and username changes.
+    """
 
     @staticmethod
     def validate_registration_data(
         username: str, email: str, password: str, password_confirm: str
-    ) -> Optional[str]:
+        ) -> Optional[str]:
+        """
+        Validate user registration data.
 
+        Args:
+            username: Desired username for the new account.
+            email: Email address for the new account.
+            password: Password for the new account.
+            password_confirm: Password confirmation (must match password).
+
+        Returns:
+            Error message string if validation fails, None if validation passes.
+        """
         if not username or not email or not password:
             return "Missing username, email or password"
         
@@ -50,7 +69,26 @@ class AuthService:
         last_name: str = "",
         **customer_data
     ) -> Customer:
-        
+        """
+        Register a new user and create associated customer profile.
+
+        Creates a new user account and sends a verification email.
+        The operation is atomic to ensure data consistency.
+
+        Args:
+            username: Username for the new account.
+            email: Email address for the new account.
+            password: Password for the new account.
+            first_name: First name of the user (optional).
+            last_name: Last name of the user (optional).
+            **customer_data: Additional customer profile data (phone, country, city, address).
+
+        Returns:
+            Created Customer instance.
+
+        Raises:
+            Exception: If customer creation fails (transaction will be rolled back).
+        """
         customer = CustomerService.register_user(
             username=username,
             email=email,
@@ -73,7 +111,18 @@ class AuthService:
 
     @staticmethod
     def verify_email_by_token(uidb64: str, token: str) -> Tuple[bool, Optional[str], Optional[Customer]]:
+        """
+        Verify user's email address using a token.
 
+        Args:
+            uidb64: Base64-encoded user ID.
+            token: Verification token generated for the user.
+
+        Returns:
+            Tuple of (success: bool, error: Optional[str], customer: Optional[Customer]).
+            If successful, returns (True, None, Customer instance).
+            If failed, returns (False, error_message, None).
+        """
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
             user = User.objects.get(pk=uid)
@@ -92,7 +141,15 @@ class AuthService:
 
     @staticmethod
     def request_password_reset(email: str) -> None:
+        """
+        Request a password reset for a user.
 
+        Sends a password reset email if the user exists.
+        Does not reveal whether the email exists in the system.
+
+        Args:
+            email: Email address of the user requesting password reset.
+        """
         try:
             user = User.objects.get(email=email)
             try:
@@ -107,10 +164,21 @@ class AuthService:
             pass
 
     @staticmethod
-    def reset_password(
-        uidb64: str, token: str, new_password: str, password_confirm: str
-    ) -> Tuple[bool, Optional[str]]:
+    def reset_password(uidb64: str, token: str, new_password: str, password_confirm: str) -> Tuple[bool, Optional[str]]:
+        """
+        Reset user password using a reset token.
 
+        Args:
+            uidb64: Base64-encoded user ID.
+            token: Password reset token.
+            new_password: New password to set.
+            password_confirm: Password confirmation (must match new_password).
+
+        Returns:
+            Tuple of (success: bool, error: Optional[str]).
+            If successful, returns (True, None).
+            If failed, returns (False, error_message).
+        """
         if not new_password or not password_confirm:
             return False, "New password and confirmation are required"
         
@@ -135,7 +203,20 @@ class AuthService:
     def change_password(
         user: User, old_password: str, new_password: str, password_confirm: str
     ) -> Tuple[bool, Optional[str]]:
+        """
+        Change user password (requires current password).
 
+        Args:
+            user: User instance whose password is being changed.
+            old_password: Current password for verification.
+            new_password: New password to set.
+            password_confirm: Password confirmation (must match new_password).
+
+        Returns:
+            Tuple of (success: bool, error: Optional[str]).
+            If successful, returns (True, None).
+            If failed, returns (False, error_message).
+        """
         if not old_password or not new_password or not password_confirm:
             return False, "Old password, new password and confirmation are required"
         
@@ -152,7 +233,22 @@ class AuthService:
 
     @staticmethod
     def request_email_change(user: User, new_email: str, password: str) -> Tuple[bool, Optional[str]]:
-        
+        """
+        Request email address change for a user.
+
+        Validates the new email and sends a confirmation email.
+        Sets email_verified to False until the change is confirmed.
+
+        Args:
+            user: User instance requesting email change.
+            new_email: New email address to set.
+            password: Current password for verification.
+
+        Returns:
+            Tuple of (success: bool, error: Optional[str]).
+            If successful, returns (True, None).
+            If failed, returns (False, error_message).
+        """
         if not new_email or not password:
             return False, "New email and password are required"
         
@@ -180,7 +276,19 @@ class AuthService:
 
     @staticmethod
     def confirm_email_change(token: str) -> Tuple[bool, Optional[str]]:
+        """
+        Confirm email address change using a confirmation token.
 
+        Updates the user's email and sets email_verified to True.
+
+        Args:
+            token: Email change confirmation token.
+
+        Returns:
+            Tuple of (success: bool, error: Optional[str]).
+            If successful, returns (True, None).
+            If failed, returns (False, error_message).
+        """
         try:
             payload = AccountEmailService.parse_email_change_token(token)
         except SignatureExpired:
@@ -213,7 +321,17 @@ class AuthService:
 
     @staticmethod
     def resend_verification_email(user: User) -> Tuple[bool, Optional[str]]:
+        """
+        Resend email verification to a user.
 
+        Args:
+            user: User instance to resend verification email to.
+
+        Returns:
+            Tuple of (success: bool, error: Optional[str]).
+            If successful, returns (True, None).
+            If failed, returns (False, error_message).
+        """
         customer = CustomerService.get_by_user(user)
         if not customer:
             return False, "Customer profile not found"
@@ -234,7 +352,21 @@ class AuthService:
 
     @staticmethod
     def request_username_change(user: User, new_username: str, password: str) -> Tuple[bool, Optional[str]]:
+        """
+        Request username change for a user.
 
+        Validates the new username and sends a confirmation email.
+
+        Args:
+            user: User instance requesting username change.
+            new_username: New username to set.
+            password: Current password for verification.
+
+        Returns:
+            Tuple of (success: bool, error: Optional[str]).
+            If successful, returns (True, None).
+            If failed, returns (False, error_message).
+        """
         if not new_username or not password:
             return False, "New username and password are required"
 
@@ -257,7 +389,17 @@ class AuthService:
 
     @staticmethod
     def confirm_username_change(token: str) -> Tuple[bool, Optional[str]]:
+        """
+        Confirm username change using a confirmation token.
 
+        Args:
+            token: Username change confirmation token.
+
+        Returns:
+            Tuple of (success: bool, error: Optional[str]).
+            If successful, returns (True, None).
+            If failed, returns (False, error_message).
+        """
         try:
             payload = AccountEmailService.parse_username_change_token(token)
         except SignatureExpired:
@@ -286,7 +428,17 @@ class AuthService:
 
     @staticmethod
     def logout_user(refresh_token: str) -> Tuple[bool, Optional[str]]:
+        """
+        Logout a user by blacklisting their refresh token.
 
+        Args:
+            refresh_token: JWT refresh token to blacklist.
+
+        Returns:
+            Tuple of (success: bool, error: Optional[str]).
+            If successful, returns (True, None).
+            If failed, returns (False, error_message).
+        """
         try:
             if refresh_token:
                 token = RefreshToken(refresh_token)

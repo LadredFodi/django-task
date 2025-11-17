@@ -1,3 +1,5 @@
+"""Serializers for offer models."""
+
 from rest_framework import serializers
 from offers.models import Offer
 from cars.serializers import CarModelListSerializer
@@ -5,7 +7,8 @@ from offers.tasks import process_customer_offer
 
 
 class OfferSerializer(serializers.ModelSerializer):
-    
+    """Detailed serializer for Offer with related customer and car model details."""
+
     customer_username = serializers.CharField(source='customer.user.username', read_only=True)
     car_model_detail = CarModelListSerializer(source='car_model', read_only=True)
     matched_dealership_name = serializers.CharField(source='matched_dealership.name', read_only=True)
@@ -59,7 +62,8 @@ class OfferSerializer(serializers.ModelSerializer):
 
 
 class OfferListSerializer(serializers.ModelSerializer):
-    
+    """Lightweight serializer for Offer list views."""
+
     customer_username = serializers.CharField(source='customer.user.username', read_only=True)
     car_brand = serializers.CharField(source='car_model.brand', read_only=True)
     car_model_name = serializers.CharField(source='car_model.model', read_only=True)
@@ -86,7 +90,8 @@ class OfferListSerializer(serializers.ModelSerializer):
 
 
 class OfferCreateSerializer(serializers.ModelSerializer):
-    
+    """Serializer for creating new offers with validation."""
+
     class Meta:
         model = Offer
         fields = [
