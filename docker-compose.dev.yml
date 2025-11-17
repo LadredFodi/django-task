@@ -1,0 +1,121 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgis/postgis:16-3.5
+    container_name: dealership_db_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${DB_NAME:-dealership_db}
+      - POSTGRES_USER=${DB_USER:-dealership_user}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-dealership_pass}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-dealership_user} -d ${DB_NAME:-dealership_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dealership_network_dev
+
+  redis:
+    image: redis:7-alpine
+    container_name: dealership_redis_dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data_dev:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dealership_network_dev
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: dealership_web_dev
+    command: >
+      sh -c "mkdir -p /app/logs &&
+             python manage.py makemigrations &&
+             python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/app 
+      - /app/venv 
+      - /app/__pycache__
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-config.settings}
+      - DEBUG=True
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    stdin_open: true
+    tty: true
+    networks:
+      - dealership_network_dev
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: dealership_celery_worker_dev
+    command: celery -A config worker -l debug --concurrency=2
+    volumes:
+      - .:/app
+      - /app/venv
+      - /app/__pycache__
+    env_file:
+      - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-config.settings}
+      - DEBUG=True
+    depends_on:
+      - db
+      - redis
+      - web
+    networks:
+      - dealership_network_dev
+
+  celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: dealership_celery_beat_dev
+    command: celery -A config beat -l debug --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    volumes:
+      - .:/app
+      - /app/venv
+      - /app/__pycache__
+    env_file:
+      - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-config.settings}
+      - DEBUG=True
+    depends_on:
+      - db
+      - redis
+      - web
+    networks:
+      - dealership_network_dev
+
+volumes:
+  postgres_data_dev:
+  redis_data_dev:
+
+networks:
+  dealership_network_dev:
+    driver: bridge
+
