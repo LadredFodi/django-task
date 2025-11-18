@@ -17,4 +17,3 @@ class BaseModel(models.Model):
     def restore(self):
         self.is_active = True
         self.save(update_fields=["is_active", "updated_at"])
-

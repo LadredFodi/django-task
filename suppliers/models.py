@@ -1,6 +1,7 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
 from django_countries.fields import CountryField
+
 from config.models import BaseModel
 
 
@@ -27,7 +28,11 @@ class Supplier(BaseModel):
 
     total_sales = models.PositiveIntegerField(verbose_name="Total Sales", default=0)
     total_revenue = models.DecimalField(
-        max_digits=16, decimal_places=2, verbose_name="Total Revenue (USD)", default=0, validators=[MinValueValidator(0)]
+        max_digits=16,
+        decimal_places=2,
+        verbose_name="Total Revenue (USD)",
+        default=0,
+        validators=[MinValueValidator(0)],
     )
 
     class Meta:
@@ -62,9 +67,7 @@ class SupplierCar(BaseModel):
     delivery_days = models.PositiveSmallIntegerField(
         verbose_name="Delivery Days", default=8, help_text="Average delivery time"
     )
-    min_order_quantity = models.PositiveSmallIntegerField(
-        verbose_name="Minimum Order Quantity", default=1
-    )
+    min_order_quantity = models.PositiveSmallIntegerField(verbose_name="Minimum Order Quantity", default=1)
 
     times_sold = models.PositiveIntegerField(verbose_name="Times Sold", default=0)
     last_purchase_date = models.DateTimeField(verbose_name="Last Purchase Date", null=True, blank=True)
@@ -83,7 +86,7 @@ class SupplierCar(BaseModel):
     def __str__(self):
         return f"{self.supplier.name} - {self.car_model} (${self.price})"
 
- 
+
 class SupplierDiscount(BaseModel):
 
     supplier = models.ForeignKey(

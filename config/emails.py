@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any, Dict
 from urllib.parse import urljoin
 
-from config import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.core import signing
@@ -11,6 +10,9 @@ from django.core.mail import send_mail
 from django.urls import reverse
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
+
+from config import settings
+
 
 class AccountEmailService:
 
@@ -36,9 +38,7 @@ class AccountEmailService:
     def send_email_verification(cls, user: User) -> str:
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
-        verification_link = cls._build_absolute_url(
-            reverse("verify_email", kwargs={"uidb64": uid, "token": token})
-        )
+        verification_link = cls._build_absolute_url(reverse("verify_email", kwargs={"uidb64": uid, "token": token}))
 
         subject = "Email verification"
         message = (
@@ -55,9 +55,7 @@ class AccountEmailService:
     def send_password_reset_email(cls, user: User) -> str:
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
-        reset_link = cls._build_absolute_url(
-            reverse("reset_password", kwargs={"uidb64": uid, "token": token})
-        )
+        reset_link = cls._build_absolute_url(reverse("reset_password", kwargs={"uidb64": uid, "token": token}))
 
         subject = "Password reset"
         message = (
@@ -74,9 +72,7 @@ class AccountEmailService:
     def send_email_change_confirmation(cls, user: User, new_email: str) -> str:
         payload: Dict[str, Any] = {"user_id": user.pk, "new_email": new_email}
         token = signing.dumps(payload, salt=cls.EMAIL_CHANGE_SALT)
-        confirmation_link = cls._build_absolute_url(
-            reverse("confirm_email_change", kwargs={"token": token})
-        )
+        confirmation_link = cls._build_absolute_url(reverse("confirm_email_change", kwargs={"token": token}))
 
         subject = "Email change confirmation"
         message = (
@@ -101,9 +97,7 @@ class AccountEmailService:
     def send_username_change_confirmation(cls, user: User, new_username: str) -> str:
         payload: Dict[str, Any] = {"user_id": user.pk, "new_username": new_username}
         token = signing.dumps(payload, salt=cls.USERNAME_CHANGE_SALT)
-        confirmation_link = cls._build_absolute_url(
-            reverse("confirm_username_change", kwargs={"token": token})
-        )
+        confirmation_link = cls._build_absolute_url(reverse("confirm_username_change", kwargs={"token": token}))
 
         subject = "Username change confirmation"
         message = (
@@ -124,4 +118,3 @@ class AccountEmailService:
             salt=cls.USERNAME_CHANGE_SALT,
             max_age=settings.ACCOUNT_ACTION_MAX_AGE,
         )
-
