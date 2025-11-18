@@ -1,3 +1,5 @@
+"""Authentication API views for user registration and account management."""
+
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -7,16 +9,32 @@ from config.services import AuthService
 
 
 class RegisterView(APIView):
+    """
+    API view for user registration.
+
+    Allows anonymous users to create a new account.
+    Sends email verification upon successful registration.
+    """
+
     permission_classes = [AllowAny]
 
     def post(self, request):
+        """
+        Register a new user account.
+
+        Args:
+            request: HTTP request containing username, email, password, password_confirm,
+                    and optional fields (first_name, last_name, phone, country, city, address).
+
+        Returns:
+            Response with success message and user data (201) or error message (400).
+        """
         username = request.data.get("username")
         email = request.data.get("email")
         password = request.data.get("password")
         password_confirm = request.data.get("password_confirm")
         first_name = request.data.get("first_name", "")
         last_name = request.data.get("last_name", "")
-
         error = AuthService.validate_registration_data(username, email, password, password_confirm)
         if error:
             return Response({"error": error}, status=status.HTTP_400_BAD_REQUEST)
@@ -47,11 +65,13 @@ class RegisterView(APIView):
 
 
 class VerifyEmailView(APIView):
+    """API view for email verification."""
+
     permission_classes = [AllowAny]
 
     def get(self, request, uidb64, token):
+        """Verify user email using token from confirmation link."""
         success, error, _ = AuthService.verify_email_by_token(uidb64, token)
-
         if not success:
             status_code = (
                 status.HTTP_404_NOT_FOUND if error == "Customer profile not found" else status.HTTP_400_BAD_REQUEST
@@ -67,11 +87,13 @@ class VerifyEmailView(APIView):
 
 
 class RequestPasswordResetView(APIView):
+    """API view for requesting password reset."""
+
     permission_classes = [AllowAny]
 
     def post(self, request):
+        """Request password reset email."""
         email = request.data.get("email")
-
         if not email:
             return Response({"error": "Email is required"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -88,12 +110,14 @@ class RequestPasswordResetView(APIView):
 
 
 class ResetPasswordView(APIView):
+    """API view for resetting password using token."""
+
     permission_classes = [AllowAny]
 
     def post(self, request, uidb64, token):
+        """Reset password using reset token."""
         new_password = request.data.get("new_password")
         password_confirm = request.data.get("password_confirm")
-
         success, error = AuthService.reset_password(uidb64, token, new_password, password_confirm)
 
         if not success:
@@ -108,15 +132,17 @@ class ResetPasswordView(APIView):
 
 
 class ChangePasswordView(APIView):
+    """API view for changing password (requires authentication)."""
+
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        """Change authenticated user's password."""
         old_password = request.data.get("old_password")
         new_password = request.data.get("new_password")
         password_confirm = request.data.get("password_confirm")
 
         success, error = AuthService.change_password(request.user, old_password, new_password, password_confirm)
-
         if not success:
             return Response({"error": error}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -129,12 +155,14 @@ class ChangePasswordView(APIView):
 
 
 class ChangeEmailView(APIView):
+    """API view for requesting email change."""
+
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        """Request email address change."""
         new_email = request.data.get("new_email")
         password = request.data.get("password")
-
         success, error = AuthService.request_email_change(request.user, new_email, password)
 
         if not success:
@@ -149,9 +177,12 @@ class ChangeEmailView(APIView):
 
 
 class ResendVerificationEmailView(APIView):
+    """API view for resending email verification."""
+
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        """Resend email verification link to authenticated user."""
         success, error = AuthService.resend_verification_email(request.user)
 
         if not success:
@@ -171,9 +202,12 @@ class ResendVerificationEmailView(APIView):
 
 
 class ChangeUsernameView(APIView):
+    """API view for requesting username change."""
+
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        """Request username change."""
         new_username = request.data.get("new_username")
         password = request.data.get("password")
 
@@ -191,9 +225,12 @@ class ChangeUsernameView(APIView):
 
 
 class ConfirmEmailChangeView(APIView):
+    """API view for confirming email change."""
+
     permission_classes = [AllowAny]
 
     def get(self, request, token):
+        """Confirm email change using confirmation token."""
         success, error = AuthService.confirm_email_change(token)
 
         if not success:
@@ -209,9 +246,12 @@ class ConfirmEmailChangeView(APIView):
 
 
 class ConfirmUsernameChangeView(APIView):
+    """API view for confirming username change."""
+
     permission_classes = [AllowAny]
 
     def get(self, request, token):
+        """Confirm username change using confirmation token."""
         success, error = AuthService.confirm_username_change(token)
 
         if not success:
@@ -227,9 +267,12 @@ class ConfirmUsernameChangeView(APIView):
 
 
 class LogoutView(APIView):
+    """API view for user logout."""
+
     permission_classes = [AllowAny]
 
     def post(self, request):
+        """Logout user by blacklisting refresh token."""
         refresh_token = request.data.get("refresh_token")
         success, error = AuthService.logout_user(refresh_token)
 

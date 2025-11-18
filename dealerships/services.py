@@ -1,3 +1,5 @@
+"""Service layer for dealership operations and business logic."""
+
 from decimal import Decimal
 from typing import Any, Optional
 
@@ -11,13 +13,16 @@ from dealerships.models import Dealership, DealershipInventory, DealershipPrefer
 
 
 class DealershipService:
+    """Service class for dealership management operations."""
 
     @staticmethod
     def get_all_active_dealerships() -> QuerySet[Dealership]:
+        """Get all active dealerships."""
         return Dealership.objects.filter(is_active=True)
 
     @staticmethod
     def get_dealership_by_id(dealership_id: int) -> Optional[Dealership]:
+        """Get dealership by ID."""
         try:
             return Dealership.objects.get(id=dealership_id, is_active=True)
         except Dealership.DoesNotExist:
@@ -25,10 +30,12 @@ class DealershipService:
 
     @staticmethod
     def create_dealership(data: dict[str, Any]) -> Dealership:
+        """Create new dealership."""
         return Dealership.objects.create(**data)
 
     @staticmethod
     def update_dealership(dealership: Dealership, data: dict[str, Any]) -> Dealership:
+        """Update dealership with provided data."""
         for key, value in data.items():
             setattr(dealership, key, value)
         dealership.save()
@@ -36,12 +43,14 @@ class DealershipService:
 
     @staticmethod
     def update_balance(dealership: Dealership, amount: Decimal) -> Dealership:
+        """Update dealership balance (add or subtract amount)."""
         dealership.balance += amount
         dealership.save(update_fields=["balance", "updated_at"])
         return dealership
 
     @staticmethod
     def get_dealership_statistics(dealership: Dealership) -> dict:
+        """Get comprehensive statistics for a dealership."""
         inventory_stats = dealership.inventory.filter(is_active=True).aggregate(
             total_cars=Sum("quantity"),
             total_models=Count("id"),
@@ -117,6 +126,7 @@ class DealershipService:
 
     @staticmethod
     def find_nearby(latitude: float, longitude: float, radius: float = 50) -> QuerySet[Dealership]:
+        """Find dealerships within specified radius using PostGIS."""
         point = Point(longitude, latitude, srid=4326)
         return (
             Dealership.objects.filter(is_active=True, location__distance_lte=(point, Distance(km=radius)))
@@ -126,27 +136,32 @@ class DealershipService:
 
 
 class DealershipInventoryService:
+    """Service class for dealership inventory management."""
 
     @staticmethod
     def get_all_active_inventory() -> QuerySet[DealershipInventory]:
+        """Get all active inventory items."""
         return DealershipInventory.objects.select_related("dealership", "car_model").filter(
             is_active=True, dealership__is_active=True
         )
 
     @staticmethod
     def get_inventory_by_dealership(dealership_id: int) -> QuerySet[DealershipInventory]:
+        """Get inventory for specific dealership."""
         return DealershipInventory.objects.filter(dealership_id=dealership_id, is_active=True).select_related(
             "car_model"
         )
 
     @staticmethod
     def get_available_inventory() -> QuerySet[DealershipInventory]:
+        """Get inventory items with quantity > 0."""
         return DealershipInventory.objects.filter(is_active=True, quantity__gt=0).select_related(
             "dealership", "car_model"
         )
 
     @staticmethod
     def get_popular_inventory(limit: int = 20) -> QuerySet[DealershipInventory]:
+        """Get most popular inventory items by sales count."""
         return (
             DealershipInventory.objects.filter(is_active=True, times_sold__gt=0)
             .select_related("dealership", "car_model")
@@ -155,10 +170,12 @@ class DealershipInventoryService:
 
     @staticmethod
     def create_inventory_item(data: dict[str, Any]) -> DealershipInventory:
+        """Create new inventory item."""
         return DealershipInventory.objects.create(**data)
 
     @staticmethod
     def update_inventory_item(inventory: DealershipInventory, data: dict) -> DealershipInventory:
+        """Update inventory item with provided data."""
         for key, value in data.items():
             setattr(inventory, key, value)
         inventory.save()
@@ -166,6 +183,7 @@ class DealershipInventoryService:
 
     @staticmethod
     def decrease_quantity(inventory: DealershipInventory, amount: int = 1) -> DealershipInventory:
+        """Decrease inventory quantity (for sales)."""
         if inventory.quantity >= amount:
             inventory.quantity -= amount
             inventory.times_sold += 1
@@ -174,19 +192,23 @@ class DealershipInventoryService:
 
     @staticmethod
     def increase_quantity(inventory: DealershipInventory, amount: int) -> DealershipInventory:
+        """Increase inventory quantity (for purchases)."""
         inventory.quantity += amount
         inventory.save(update_fields=["quantity", "updated_at"])
         return inventory
 
 
 class PurchaseService:
+    """Service class for purchase management operations."""
 
     @staticmethod
     def get_all_active_purchases() -> QuerySet[Purchase]:
+        """Get all active purchases."""
         return Purchase.objects.select_related("dealership", "supplier", "car_model").filter(is_active=True)
 
     @staticmethod
     def get_purchases_by_dealership(dealership_id: int) -> QuerySet[Purchase]:
+        """Get all purchases for specific dealership."""
         return (
             Purchase.objects.filter(dealership_id=dealership_id, is_active=True)
             .select_related("supplier", "car_model")
@@ -195,6 +217,7 @@ class PurchaseService:
 
     @staticmethod
     def create_purchase(data: dict[str, Any]) -> Purchase:
+        """Create purchase and update inventory and balance."""
         purchase = Purchase.objects.create(**data)
 
         inventory, created = DealershipInventory.objects.get_or_create(
@@ -221,10 +244,12 @@ class PurchaseService:
 
     @staticmethod
     def get_purchase_count(supplier_id: int, dealership_id: int) -> int:
+        """Count purchases between specific supplier and dealership."""
         return Purchase.objects.filter(supplier_id=supplier_id, dealership_id=dealership_id, is_active=True).count()
 
     @staticmethod
     def get_statistics() -> dict[str, Any]:
+        """Get comprehensive purchase statistics."""
         queryset = Purchase.objects.filter(is_active=True)
 
         basic_stats = queryset.aggregate(
@@ -257,9 +282,11 @@ class PurchaseService:
 
 
 class DealershipPreferenceService:
+    """Service class for dealership preference management."""
 
     @staticmethod
     def get_preference_by_dealership(dealership_id: int) -> Optional[DealershipPreference]:
+        """Get preferences for specific dealership."""
         try:
             return DealershipPreference.objects.get(dealership_id=dealership_id, is_active=True)
         except DealershipPreference.DoesNotExist:
@@ -267,10 +294,12 @@ class DealershipPreferenceService:
 
     @staticmethod
     def create_preference(data: dict[str, Any]) -> DealershipPreference:
+        """Create new dealership preference."""
         return DealershipPreference.objects.create(**data)
 
     @staticmethod
     def update_preference(preference: DealershipPreference, data: dict[str, Any]) -> DealershipPreference:
+        """Update dealership preference with provided data."""
         for key, value in data.items():
             setattr(preference, key, value)
         preference.save()

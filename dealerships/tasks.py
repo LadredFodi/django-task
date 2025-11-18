@@ -1,3 +1,5 @@
+"""Celery tasks for dealership operations and automated processes."""
+
 from datetime import timedelta
 from decimal import Decimal
 from typing import Any, Dict, Optional
@@ -15,7 +17,15 @@ from suppliers.models import Supplier, SupplierCar
 
 @shared_task(name="config.tasks.dealership_purchase_cars")
 def dealership_purchase_cars():
+    """
+    Celery task to automate car purchases for all dealerships.
 
+    Analyzes demand and preferences for each dealership and makes
+    automated purchase decisions from suppliers.
+
+    Returns:
+        dict: Summary with total purchases made.
+    """
     active_dealerships = Dealership.objects.filter(is_active=True)
     total_purchases = 0
 
@@ -30,7 +40,15 @@ def dealership_purchase_cars():
 
 
 def _process_dealership_purchases(dealership: Dealership) -> int:
+    """
+    Process purchases for a single dealership.
 
+    Args:
+        dealership: Dealership instance to process.
+
+    Returns:
+        Number of successful purchases made.
+    """
     try:
         preferences = dealership.preferences.filter(is_active=True).first()
     except Exception:
@@ -75,7 +93,15 @@ def _process_dealership_purchases(dealership: Dealership) -> int:
 
 
 def _analyze_demand(dealership: Dealership) -> Dict[int, int]:
+    """
+    Analyze sales demand for last 30 days.
 
+    Args:
+        dealership: Dealership to analyze.
+
+    Returns:
+        Dictionary mapping car_model_id to sales count.
+    """
     thirty_days_ago = timezone.now() - timedelta(days=30)
 
     sales_stats = (
@@ -85,6 +111,7 @@ def _analyze_demand(dealership: Dealership) -> Dict[int, int]:
         .order_by("-sold_count")
     )
 
+>>>>>>> develop
     demand = {}
     for stat in sales_stats:
         demand[stat["car_model_id"]] = stat["sold_count"]
@@ -95,7 +122,17 @@ def _analyze_demand(dealership: Dealership) -> Dict[int, int]:
 def _get_models_to_purchase(
     dealership: Dealership, preferences: Optional[DealershipPreference], demand_analysis: Dict[int, int]
 ) -> Dict[int, int]:
+    """
+    Determine which models to purchase based on demand and preferences.
 
+    Args:
+        dealership: Dealership instance.
+        preferences: Dealership preferences (optional).
+        demand_analysis: Sales demand data.
+
+    Returns:
+        Dictionary mapping car_model_id to quantity needed.
+    """
     models_to_purchase = {}
 
     current_inventory = dealership.inventory.filter(is_active=True).select_related("car_model")
@@ -130,7 +167,18 @@ def _get_models_to_purchase(
 
 
 def _find_best_supplier_offer(car_model_id: int, quantity: int) -> Optional[Dict[str, Any]]:
+    """
+    Find best supplier offer for specified car model and quantity.
 
+    Considers base prices and active promotions.
+
+    Args:
+        car_model_id: ID of car model to purchase.
+        quantity: Quantity needed.
+
+    Returns:
+        Dictionary with best offer details or None if no offers available.
+    """
     now = timezone.now()
 
     supplier_cars = SupplierCar.objects.filter(
@@ -195,7 +243,24 @@ def _create_purchase(
     discount_applied: Decimal = Decimal("0"),
     promotion_id: Optional[int] = None,
 ) -> Optional[Purchase]:
+    """
+    Create purchase transaction and update all related records.
 
+    Updates: Purchase, Dealership balance, Inventory, SupplierCar, Supplier stats.
+
+    Args:
+        dealership: Buying dealership.
+        supplier_id: Selling supplier ID.
+        car_model_id: Car model ID.
+        quantity: Number of cars.
+        unit_price: Price per car.
+        total_price: Total transaction price.
+        discount_applied: Discount percentage applied.
+        promotion_id: Applied promotion ID (optional).
+
+    Returns:
+        Created Purchase instance or None if failed.
+    """
     try:
         with transaction.atomic():
             purchase = Purchase.objects.create(

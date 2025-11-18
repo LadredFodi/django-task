@@ -1,9 +1,12 @@
+"""Serializers for car models."""
+
 from rest_framework import serializers
 
 from cars.models import CarModel
 
 
 class CarModelSerializer(serializers.ModelSerializer):
+    """Detailed serializer for CarModel with display fields for choices."""
 
     body_type_display = serializers.CharField(source="get_body_type_display", read_only=True)
     fuel_type_display = serializers.CharField(source="get_fuel_type_display", read_only=True)
@@ -40,6 +43,7 @@ class CarModelSerializer(serializers.ModelSerializer):
 
 
 class CarModelListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for CarModel list views with essential fields only."""
 
     body_type_display = serializers.CharField(source="get_body_type_display", read_only=True)
     fuel_type_display = serializers.CharField(source="get_fuel_type_display", read_only=True)

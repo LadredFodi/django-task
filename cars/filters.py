@@ -1,9 +1,12 @@
+"""Filters for car model queryset."""
+
 import django_filters
 
 from cars.models import CarModel
 
 
 class CarModelFilter(django_filters.FilterSet):
+    """FilterSet for CarModel with extensive filtering options."""
 
     brand = django_filters.CharFilter(lookup_expr="icontains")
     model = django_filters.CharFilter(lookup_expr="icontains")

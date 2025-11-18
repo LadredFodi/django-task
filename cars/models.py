@@ -1,3 +1,5 @@
+"""Car models for the Dealership Management System."""
+
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
@@ -5,6 +7,12 @@ from config.models import BaseModel
 
 
 class CarModel(BaseModel):
+    """
+    Model representing a car specification.
+
+    Stores detailed information about car models including brand, specifications,
+    engine details, and physical characteristics.
+    """
 
     BODY_TYPE_CHOICES = [
         ("sedan", "Sedan"),

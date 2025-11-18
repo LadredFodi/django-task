@@ -1,3 +1,5 @@
+"""Supplier models for managing suppliers and their catalogs."""
+
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django_countries.fields import CountryField

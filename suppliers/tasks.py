@@ -1,3 +1,5 @@
+"""Celery tasks for supplier operations and price updates."""
+
 from decimal import Decimal
 
 from celery import shared_task

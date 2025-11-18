@@ -1,3 +1,5 @@
+"""Dealership models for managing dealerships, inventory, and purchases."""
+
 from django.contrib.gis.db.models import PointField
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -7,6 +9,12 @@ from config.models import BaseModel
 
 
 class Dealership(BaseModel):
+    """
+    Model representing a car dealership.
+
+    Stores dealership information including location (with PostGIS support),
+    contact details, financial data, and sales statistics.
+    """
 
     name = models.CharField(max_length=256, verbose_name="Dealership Name", unique=True, db_index=True)
 
@@ -61,6 +69,11 @@ class Dealership(BaseModel):
 
 
 class DealershipPreference(BaseModel):
+    """
+    Model storing dealership purchasing preferences.
+
+    Defines preferred car types, brands, and price ranges for automated purchasing.
+    """
 
     dealership = models.ForeignKey(
         Dealership, on_delete=models.CASCADE, related_name="preferences", verbose_name="Dealership"
@@ -115,6 +128,11 @@ class DealershipPreference(BaseModel):
 
 
 class DealershipInventory(BaseModel):
+    """
+    Model representing car inventory at a dealership.
+
+    Tracks quantity, pricing, and sales statistics for each car model at each dealership.
+    """
 
     dealership = models.ForeignKey(
         Dealership, on_delete=models.CASCADE, related_name="inventory", verbose_name="Dealership"
@@ -158,6 +176,11 @@ class DealershipInventory(BaseModel):
 
 
 class Purchase(BaseModel):
+    """
+    Model representing a purchase transaction from supplier to dealership.
+
+    Records all purchase details including pricing, discounts, and applied promotions.
+    """
 
     dealership = models.ForeignKey(
         Dealership, on_delete=models.CASCADE, related_name="purchases", verbose_name="Dealership"

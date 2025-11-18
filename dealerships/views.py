@@ -1,3 +1,5 @@
+"""API views for dealerships, inventory, and purchases."""
+
 from decimal import Decimal
 
 from django_filters.rest_framework import DjangoFilterBackend

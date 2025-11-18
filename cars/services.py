@@ -1,3 +1,5 @@
+"""Service layer for car model operations."""
+
 from typing import Any, List, Optional
 
 from django.db.models import Count, QuerySet
@@ -6,13 +8,16 @@ from cars.models import CarModel
 
 
 class CarModelService:
+    """Service class providing business logic for car model operations."""
 
     @staticmethod
     def get_all_active_cars() -> QuerySet[CarModel]:
+        """Get all active car models."""
         return CarModel.objects.filter(is_active=True)
 
     @staticmethod
     def get_car_by_id(car_model_id: int) -> Optional[CarModel]:
+        """Get active car model by ID."""
         try:
             return CarModel.objects.get(id=car_model_id, is_active=True)
         except CarModel.DoesNotExist:
@@ -20,10 +25,12 @@ class CarModelService:
 
     @staticmethod
     def create_car_model(data: dict[str, Any]) -> CarModel:
+        """Create a new car model."""
         return CarModel.objects.create(**data)
 
     @staticmethod
     def update_car_model(car_model: CarModel, data: dict[str, Any]) -> CarModel:
+        """Update car model with provided data."""
         for key, value in data.items():
             setattr(car_model, key, value)
         car_model.save()
@@ -31,15 +38,18 @@ class CarModelService:
 
     @staticmethod
     def soft_delete_car_model(car_model: CarModel) -> None:
+        """Soft delete a car model."""
         car_model.soft_delete()
 
     @staticmethod
     def restore_car_model(car_model: CarModel) -> CarModel:
+        """Restore a soft-deleted car model."""
         car_model.restore()
         return car_model
 
     @staticmethod
     def get_popular_models(limit: int = 10) -> QuerySet[CarModel]:
+        """Get most popular car models based on sales count."""
         return (
             CarModel.objects.filter(is_active=True)
             .annotate(sales_count=Count("sales"))
@@ -49,6 +59,7 @@ class CarModelService:
 
     @staticmethod
     def get_all_brands() -> List[str]:
+        """Get list of all active car brands."""
         return list(
             CarModel.objects.filter(is_active=True).values_list("brand", flat=True).distinct().order_by("brand")
         )
@@ -61,6 +72,7 @@ class CarModelService:
         body_type: Optional[str] = None,
         fuel_type: Optional[str] = None,
     ) -> QuerySet[CarModel]:
+        """Filter car models by various criteria."""
         queryset = CarModel.objects.filter(is_active=True)
 
         if brand:

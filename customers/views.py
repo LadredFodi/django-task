@@ -1,3 +1,5 @@
+"""API views for customers and sales."""
+
 from decimal import Decimal
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -23,6 +25,7 @@ from customers.services import CustomerService, SaleService
 
 
 class CustomerViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing customer profiles with registration and statistics."""
 
     queryset = Customer.objects.select_related("user").all()
     permission_classes = [IsAuthenticated]
@@ -151,6 +154,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
 
 
 class SaleViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing sales records with statistics."""
 
     queryset = Sale.objects.select_related("dealership", "customer", "car_model").all()
     permission_classes = [IsAuthenticated]

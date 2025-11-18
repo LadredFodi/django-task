@@ -1,3 +1,5 @@
+"""Promotion models for managing discounts and special offers."""
+
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
