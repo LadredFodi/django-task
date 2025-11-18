@@ -30,4 +30,3 @@ tmp_upload_dir = None
 limit_request_line = 4094
 limit_request_fields = 100
 limit_request_field_size = 8190
-

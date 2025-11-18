@@ -1,12 +1,9 @@
-from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
-from django_countries.fields import CountryField
-from config.models import BaseModel
-
-
 from django.contrib.gis.db.models import PointField
-   
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
+from django_countries.fields import CountryField
 
+from config.models import BaseModel
 
 
 class Dealership(BaseModel):
@@ -39,12 +36,13 @@ class Dealership(BaseModel):
 
     total_sales = models.PositiveIntegerField(verbose_name="Total Sales", default=0)
     total_revenue = models.DecimalField(
-        max_digits=16, decimal_places=2, verbose_name="Total Revenue (USD)", default=0, validators=[MinValueValidator(0)]
+        max_digits=16,
+        decimal_places=2,
+        verbose_name="Total Revenue (USD)",
+        default=0,
+        validators=[MinValueValidator(0)],
     )
-    total_profit = models.DecimalField(
-        max_digits=16, decimal_places=2, verbose_name="Total Profit (USD)", default=0
-    )
-
+    total_profit = models.DecimalField(max_digits=16, decimal_places=2, verbose_name="Total Profit (USD)", default=0)
 
     description = models.TextField(verbose_name="Description", blank=True, null=True)
 

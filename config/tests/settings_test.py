@@ -1,5 +1,5 @@
-from pathlib import Path
 from datetime import timedelta
+from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -7,7 +7,7 @@ SECRET_KEY = "test-secret-key-for-testing-only"
 
 DEBUG = False
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -17,7 +17,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.gis",
-    
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
@@ -25,7 +24,6 @@ INSTALLED_APPS = [
     "django_filters",
     "django_celery_beat",
     "django_countries",
-    
     "dealerships.apps.DealershipsConfig",
     "customers.apps.CustomersConfig",
     "suppliers.apps.SuppliersConfig",
@@ -71,7 +69,7 @@ DATABASES = {
     }
 }
 
-AUTH_PASSWORD_VALIDATORS = []
+AUTH_PASSWORD_VALIDATORS: list = []
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
@@ -113,10 +111,10 @@ SIMPLE_JWT = {
     "SIGNING_KEY": SECRET_KEY,
 }
 
-EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
 PASSWORD_HASHERS = [
-    'django.contrib.auth.hashers.MD5PasswordHasher',
+    "django.contrib.auth.hashers.MD5PasswordHasher",
 ]
 
 CELERY_TASK_ALWAYS_EAGER = True
@@ -125,17 +123,17 @@ CELERY_BROKER_URL = "memory://"
 CELERY_RESULT_BACKEND = "cache+memory://"
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': True,
-    'handlers': {
-        'null': {
-            'class': 'logging.NullHandler',
+    "version": 1,
+    "disable_existing_loggers": True,
+    "handlers": {
+        "null": {
+            "class": "logging.NullHandler",
         },
     },
-    'loggers': {
-        '': {
-            'handlers': ['null'],
-            'level': 'CRITICAL',
+    "loggers": {
+        "": {
+            "handlers": ["null"],
+            "level": "CRITICAL",
         },
     },
 }

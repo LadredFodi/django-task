@@ -1,6 +1,6 @@
-from django.db import models
 from django.core.validators import MinValueValidator
-from django.core.exceptions import ValidationError
+from django.db import models
+
 from config.models import BaseModel
 
 
@@ -29,7 +29,9 @@ class Offer(BaseModel):
         help_text="Maximum price the customer is willing to pay",
     )
 
-    status = models.CharField(max_length=32, choices=STATUS_CHOICES, default="pending", verbose_name="Status", db_index=True)
+    status = models.CharField(
+        max_length=32, choices=STATUS_CHOICES, default="pending", verbose_name="Status", db_index=True
+    )
 
     matched_dealership = models.ForeignKey(
         "dealerships.Dealership",
