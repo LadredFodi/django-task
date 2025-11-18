@@ -1,3 +1,5 @@
+"""Service layer for promotion operations and business logic."""
+
 from decimal import Decimal
 from typing import Any, Optional
 

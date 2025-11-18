@@ -1,3 +1,5 @@
+"""Offer models for customer purchase offers and dealership matching."""
+
 from django.core.validators import MinValueValidator
 from django.db import models
 

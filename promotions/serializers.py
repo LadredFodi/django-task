@@ -1,3 +1,5 @@
+"""Serializers for promotion models."""
+
 from django.utils import timezone
 from rest_framework import serializers
 

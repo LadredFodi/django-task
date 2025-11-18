@@ -1,3 +1,5 @@
+"""Service layer for supplier operations and business logic."""
+
 from typing import Any, Optional
 
 from django.db.models import Avg, Count, Min, Q, QuerySet, Sum

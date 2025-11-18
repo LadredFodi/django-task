@@ -1,3 +1,5 @@
+"""Serializers for supplier and catalog models."""
+
 from rest_framework import serializers
 
 from cars.serializers import CarModelListSerializer
