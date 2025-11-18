@@ -91,16 +91,16 @@ class IsOwnerOrAdmin(permissions.BasePermission):
         """
         if request.user.is_staff:
             return True
-        
-        if hasattr(obj, 'user'):
+
+        if hasattr(obj, "user"):
             return obj.user == request.user
-        
-        if hasattr(obj, 'customer'):
+
+        if hasattr(obj, "customer"):
             return obj.customer.user == request.user
-        
-        if hasattr(obj, 'customer'):
+
+        if hasattr(obj, "customer"):
             return obj.customer.user == request.user
-            
+
         return False
 
 
@@ -113,7 +113,7 @@ class IsEmailVerified(permissions.BasePermission):
     """
 
     message = "Email must be verified to perform this action."
-    
+
     def has_permission(self, request, view):
         """
         Check if the user's email is verified.
@@ -127,14 +127,14 @@ class IsEmailVerified(permissions.BasePermission):
         """
         if not request.user or not request.user.is_authenticated:
             return False
-       
+
         if request.user.is_staff:
             return True
-        
+
         try:
             customer = request.user.customer_profile
             return customer.email_verified
-        except:
+        except AttributeError:
             return False
 
 
@@ -157,4 +157,3 @@ class ReadOnlyPermission(permissions.BasePermission):
             bool: True if request method is safe, False otherwise.
         """
         return request.method in permissions.SAFE_METHODS
-

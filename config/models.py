@@ -42,4 +42,3 @@ class BaseModel(models.Model):
         """
         self.is_active = True
         self.save(update_fields=["is_active", "updated_at"])
-

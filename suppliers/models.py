@@ -1,19 +1,11 @@
-"""Supplier models for managing suppliers and their catalogs."""
-
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
 from django_countries.fields import CountryField
+
 from config.models import BaseModel
 
 
-
 class Supplier(BaseModel):
-    """
-    Model representing a car supplier company.
-
-    Stores supplier information including rating, sales statistics, and contact details.
-    """
-
     name = models.CharField(max_length=256, verbose_name="Company Name", unique=True, db_index=True)
     country = CountryField(verbose_name="Country")
     founded_year = models.PositiveIntegerField(
@@ -36,7 +28,11 @@ class Supplier(BaseModel):
 
     total_sales = models.PositiveIntegerField(verbose_name="Total Sales", default=0)
     total_revenue = models.DecimalField(
-        max_digits=16, decimal_places=2, verbose_name="Total Revenue (USD)", default=0, validators=[MinValueValidator(0)]
+        max_digits=16,
+        decimal_places=2,
+        verbose_name="Total Revenue (USD)",
+        default=0,
+        validators=[MinValueValidator(0)],
     )
 
     class Meta:
@@ -53,11 +49,6 @@ class Supplier(BaseModel):
 
 
 class SupplierCar(BaseModel):
-    """
-    Model representing a car model available from a supplier.
-
-    Tracks pricing, availability, delivery times, and sales statistics.
-    """
 
     supplier = models.ForeignKey(
         Supplier, on_delete=models.CASCADE, related_name="supplier_cars", verbose_name="Supplier"
@@ -76,9 +67,7 @@ class SupplierCar(BaseModel):
     delivery_days = models.PositiveSmallIntegerField(
         verbose_name="Delivery Days", default=8, help_text="Average delivery time"
     )
-    min_order_quantity = models.PositiveSmallIntegerField(
-        verbose_name="Minimum Order Quantity", default=1
-    )
+    min_order_quantity = models.PositiveSmallIntegerField(verbose_name="Minimum Order Quantity", default=1)
 
     times_sold = models.PositiveIntegerField(verbose_name="Times Sold", default=0)
     last_purchase_date = models.DateTimeField(verbose_name="Last Purchase Date", null=True, blank=True)
@@ -97,13 +86,8 @@ class SupplierCar(BaseModel):
     def __str__(self):
         return f"{self.supplier.name} - {self.car_model} (${self.price})"
 
- 
-class SupplierDiscount(BaseModel):
-    """
-    Model representing loyalty discounts from suppliers to dealerships.
 
-    Tracks discount percentages and conditions for long-term partnerships.
-    """
+class SupplierDiscount(BaseModel):
 
     supplier = models.ForeignKey(
         Supplier, on_delete=models.CASCADE, related_name="loyalty_discounts", verbose_name="Supplier"

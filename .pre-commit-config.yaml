@@ -1,0 +1,53 @@
+repos:
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+
+  - repo: https://github.com/psf/black
+    rev: 24.10.0
+    hooks:
+      - id: black
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.1.1
+    hooks:
+      - id: flake8
+        args: ['--max-line-length=120', '--extend-ignore=E203,W503']
+
+  - repo: https://github.com/pycqa/pylint
+    rev: v3.3.1
+    hooks:
+      - id: pylint
+        args: ['--load-plugins=pylint_django', '--django-settings-module=config.settings']
+        additional_dependencies:
+          - django==5.1.2
+          - djangorestframework==3.15.2
+          - django-stubs==5.1.0
+          - djangorestframework-stubs==3.15.1
+          - pylint-django==2.6.1
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.13.0
+    hooks:
+      - id: mypy
+        args: [--ignore-missing-imports, --no-warn-return-any, --no-warn-unused-ignores]
+        additional_dependencies:
+          - django==5.1.2
+          - django-stubs[compatible-mypy]==5.2.7
+          - djangorestframework-stubs==3.16.4
+          - types-pytz
+          - types-requests
+          - celery
+          - django-filter
+          - python-decouple
+          - django-countries
+          - drf-yasg
+          - djangorestframework-simplejwt
+          - django-redis
+          - django-debug-toolbar
+          - django-celery-beat
+          - psycopg2-binary
+          - Faker
+          - pytest
+          - pytest-django

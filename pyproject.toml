@@ -58,6 +58,21 @@ disable = [
     "C0103",  # invalid-name
     "R0903",  # too-few-public-methods
     "R0913",  # too-many-arguments
+    "E0401",  # unable-to-import
+    "W0613",  # unused-argument
+    "W0621",  # redefined-outer-name
+    "W0718",  # broad-exception-caught
+    "R0901",  # too-many-ancestors
+    "R0801",  # duplicate-code
+    "E5142",  # imported-auth-user
+    "W0237",  # arguments-renamed
+    "W0223",  # abstract-method
+    "C0415",  # import-outside-toplevel
+    "W0212",  # protected-access
+    "R0911",  # too-many-return-statements
+    "R0917",  # too-many-positional-arguments
+    "R1705",  # no-else-return
+    "F5110",  # django-settings-module-not-found
 ]
 
 [tool.pylint.format]
