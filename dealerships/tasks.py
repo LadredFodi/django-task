@@ -111,7 +111,6 @@ def _analyze_demand(dealership: Dealership) -> Dict[int, int]:
         .order_by("-sold_count")
     )
 
->>>>>>> develop
     demand = {}
     for stat in sales_stats:
         demand[stat["car_model_id"]] = stat["sold_count"]
